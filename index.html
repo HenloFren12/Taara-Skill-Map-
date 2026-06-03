@@ -2,1900 +2,850 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>University Gatepass Runner - CYBER EDITION</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TAARA — Complete Career Skill Map</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  
-  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
-  
-  body { 
-    overflow: hidden; 
-    font-family: 'VT323', monospace; 
-    background: #0a0a15;
-  }
-  canvas { display: block; }
-  
-  /* CRT Scanlines overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: repeating-linear-gradient(
-      0deg,
-      rgba(0,0,0,0.15),
-      rgba(0,0,0,0.15) 1px,
-      transparent 1px,
-      transparent 3px
-    );
-    pointer-events: none;
-    z-index: 9998;
-    mix-blend-mode: multiply;
-  }
-  
-  body::after {
-    content: '';
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: radial-gradient(
-      ellipse at center,
-      transparent 50%,
-      rgba(0,0,0,0.6) 100%
-    );
-    pointer-events: none;
-    z-index: 9999;
-  }
-  
-  /* ============ GATEPASS REQUEST FORM ============ */
-  #formScreen {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100vh;
-    z-index: 200;
-    background: linear-gradient(135deg, #0a0520 0%, #1a0a3a 50%, #0a0520 100%);
-    overflow-y: auto;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-  }
-  
-  #formScreen::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-image: 
-      linear-gradient(rgba(0, 240, 255, 0.12) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 240, 255, 0.12) 1px, transparent 1px);
-    background-size: 50px 50px;
-    pointer-events: none;
-    animation: gridMoveForm 25s linear infinite;
-  }
-  
-  @keyframes gridMoveForm {
-    from { background-position: 0 0; }
-    to { background-position: 50px 50px; }
-  }
-  
-  /* Glow orbs in background */
-  #formScreen .orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.4;
-    pointer-events: none;
-  }
-  .orb-1 {
-    width: 300px; height: 300px;
-    background: #ff00ff;
-    top: -50px; left: -50px;
-  }
-  .orb-2 {
-    width: 400px; height: 400px;
-    background: #00f0ff;
-    bottom: -100px; right: -100px;
-  }
-  
-  .form-card {
-    position: relative;
-    width: 100%;
-    max-width: 520px;
-    padding: 40px 45px;
-    background: rgba(15, 10, 40, 0.55);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 240, 255, 0.4);
-    border-radius: 20px;
-    box-shadow: 
-      0 0 40px rgba(0, 240, 255, 0.4),
-      0 0 80px rgba(255, 0, 255, 0.2),
-      inset 0 0 30px rgba(0, 240, 255, 0.05);
-    z-index: 2;
-    animation: cardAppear 0.8s ease-out;
-  }
-  
-  @keyframes cardAppear {
-    from { opacity: 0; transform: translateY(30px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  
-  .form-label-tag {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 9px;
-    color: #00f0ff;
-    letter-spacing: 2px;
-    margin-bottom: 8px;
-    opacity: 0.8;
-  }
-  
-  .form-title {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 26px;
-    background: linear-gradient(90deg, #ff00ff, #00f0ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 5px;
-    text-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
-    filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.5));
-    letter-spacing: 1px;
-  }
-  
-  .form-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #00f0ff, transparent);
-    margin: 25px 0;
-    opacity: 0.6;
-  }
-  
-  .input-group {
-    margin-bottom: 22px;
-  }
-  
-  .input-label {
-    display: block;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 10px;
-    color: #ff00ff;
-    letter-spacing: 1.5px;
-    margin-bottom: 10px;
-    text-shadow: 0 0 8px rgba(255, 0, 255, 0.6);
-  }
-  
-  .cyber-input, .cyber-textarea {
-    width: 100%;
-    padding: 14px 16px;
-    background: rgba(0, 0, 20, 0.6);
-    border: 1px solid rgba(0, 240, 255, 0.3);
-    border-radius: 8px;
-    color: #fff;
-    font-family: 'VT323', monospace;
-    font-size: 20px;
-    outline: none;
-    transition: all 0.3s ease;
-    letter-spacing: 1px;
-  }
-  
-  .cyber-input:focus, .cyber-textarea:focus {
-    border-color: #00f0ff;
-    box-shadow: 
-      0 0 0 2px rgba(0, 240, 255, 0.2),
-      0 0 20px rgba(0, 240, 255, 0.5),
-      inset 0 0 10px rgba(0, 240, 255, 0.1);
-    background: rgba(0, 20, 40, 0.7);
-  }
-  
-  .cyber-input::placeholder, .cyber-textarea::placeholder {
-    color: rgba(255, 255, 255, 0.3);
-  }
-  
-  .cyber-textarea {
-    resize: none;
-    min-height: 90px;
-    line-height: 1.4;
-  }
-  
-  .char-counter {
-    text-align: right;
-    font-family: 'VT323', monospace;
-    font-size: 16px;
-    color: #00f0ff;
-    margin-top: 5px;
-    letter-spacing: 1px;
-    opacity: 0.7;
-  }
-  
-  .urgency-row {
-    display: flex;
-    gap: 12px;
-    margin-top: 8px;
-  }
-  
-  .urgency-btn {
-    flex: 1;
-    padding: 14px 8px;
-    background: rgba(0, 0, 20, 0.5);
-    border: 2px solid;
-    border-radius: 8px;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 10px;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-  
-  .urgency-btn.casual {
-    border-color: #00ff88;
-    color: #00ff88;
-    box-shadow: 0 0 12px rgba(0, 255, 136, 0.3), inset 0 0 8px rgba(0, 255, 136, 0.05);
-  }
-  .urgency-btn.urgent {
-    border-color: #ffff00;
-    color: #ffff00;
-    box-shadow: 0 0 12px rgba(255, 255, 0, 0.3), inset 0 0 8px rgba(255, 255, 0, 0.05);
-  }
-  .urgency-btn.life {
-    border-color: #ff0066;
-    color: #ff0066;
-    box-shadow: 0 0 12px rgba(255, 0, 102, 0.3), inset 0 0 8px rgba(255, 0, 102, 0.05);
-  }
-  
-  .urgency-btn:hover {
-    transform: translateY(-3px);
-  }
-  .urgency-btn.casual:hover {
-    background: rgba(0, 255, 136, 0.15);
-    box-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
-  }
-  .urgency-btn.urgent:hover {
-    background: rgba(255, 255, 0, 0.15);
-    box-shadow: 0 0 25px rgba(255, 255, 0, 0.7);
-  }
-  .urgency-btn.life:hover {
-    background: rgba(255, 0, 102, 0.15);
-    box-shadow: 0 0 25px rgba(255, 0, 102, 0.7);
-  }
-  
-  .urgency-btn.active {
-    transform: translateY(-3px);
-  }
-  .urgency-btn.casual.active {
-    background: rgba(0, 255, 136, 0.25);
-    box-shadow: 0 0 30px rgba(0, 255, 136, 0.9), inset 0 0 15px rgba(0, 255, 136, 0.3);
-  }
-  .urgency-btn.urgent.active {
-    background: rgba(255, 255, 0, 0.25);
-    box-shadow: 0 0 30px rgba(255, 255, 0, 0.9), inset 0 0 15px rgba(255, 255, 0, 0.3);
-  }
-  .urgency-btn.life.active {
-    background: rgba(255, 0, 102, 0.25);
-    box-shadow: 0 0 30px rgba(255, 0, 102, 0.9), inset 0 0 15px rgba(255, 0, 102, 0.3);
-  }
-  
-  .submit-btn {
-    width: 100%;
-    margin-top: 30px;
-    padding: 18px;
-    background: linear-gradient(90deg, #ff00ff 0%, #aa00ff 50%, #00f0ff 100%);
-    background-size: 200% 100%;
-    border: none;
-    border-radius: 10px;
-    color: white;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 14px;
-    cursor: pointer;
-    letter-spacing: 2px;
-    text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
-    box-shadow: 
-      0 0 30px rgba(255, 0, 255, 0.6),
-      0 0 60px rgba(0, 240, 255, 0.4);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .submit-btn:hover {
-    background-position: 100% 0;
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 
-      0 0 50px rgba(255, 0, 255, 0.9),
-      0 0 100px rgba(0, 240, 255, 0.7);
-  }
-  
-  .submit-btn:active {
-    transform: translateY(-1px) scale(1);
-  }
-  
-  .submit-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-  }
-  
-  .form-error {
-    color: #ff0066;
-    font-family: 'VT323', monospace;
-    font-size: 18px;
-    text-align: center;
-    margin-top: 15px;
-    text-shadow: 0 0 10px #ff0066;
-    min-height: 24px;
-  }
-  
-  /* AI REVIEW LOADING SCREEN */
-  #reviewScreen {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 250;
-    background: rgba(5, 5, 16, 0.95);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-  }
-  
-  .review-text {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 22px;
-    color: #00f0ff;
-    text-shadow: 0 0 20px #00f0ff;
-    margin-bottom: 30px;
-    letter-spacing: 2px;
-  }
-  
-  .review-status {
-    font-family: 'VT323', monospace;
-    font-size: 22px;
-    color: #fff;
-    margin-top: 20px;
-    min-height: 30px;
-  }
-  
-  .loading-bar {
-    width: 350px;
-    height: 8px;
-    background: rgba(0, 0, 20, 0.8);
-    border: 1px solid #ff00ff;
-    border-radius: 4px;
-    overflow: hidden;
-    box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
-  }
-  .loading-bar-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #ff00ff, #00f0ff);
-    box-shadow: 0 0 15px #00f0ff;
-    transition: width 0.3s;
-  }
-  
-  /* ============ HUD ============ */
-  #hud {
-    position: fixed; top: 20px; left: 20px;
-    font-size: 18px; z-index: 10;
-    font-family: 'Press Start 2P', monospace;
-    color: #00f0ff;
-    text-shadow: 0 0 10px #00f0ff, 2px 2px 0 #ff00ff;
-  }
-  
-  #score { 
-    color: #ffff00; 
-    font-size: 24px;
-    text-shadow: 0 0 15px #ffff00, 2px 2px 0 #ff00ff;
-  }
-  
-  #progress {
-    width: 320px; height: 22px; 
-    background: rgba(10,10,30,0.8);
-    border: 2px solid #ff00ff; 
-    margin-top: 12px;
-    overflow: hidden;
-    box-shadow: 0 0 15px rgba(255, 0, 255, 0.6), inset 0 0 8px rgba(0,0,0,0.8);
-  }
-  #progressBar {
-    height: 100%; width: 0%; 
-    background: linear-gradient(90deg, #ff00ff, #00f0ff);
-    transition: width 0.3s;
-    box-shadow: 0 0 10px #00f0ff;
-  }
-  
-  #instructions {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    color: #00f0ff; text-align: center; z-index: 10;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 12px;
-    text-shadow: 0 0 8px #00f0ff;
-    background: rgba(10,10,30,0.8); 
-    padding: 12px 24px; 
-    border: 2px solid #ff00ff;
-    box-shadow: 0 0 20px rgba(255,0,255,0.5);
-  }
-  
-  #gateAlert {
-    position: fixed; top: 25%; left: 50%; transform: translateX(-50%);
-    color: #ff00ff; 
-    font-family: 'Press Start 2P', monospace;
-    font-size: 36px;
-    text-shadow: 0 0 20px #ff00ff, 4px 0 0 #00f0ff, -4px 0 0 #ffff00;
-    z-index: 10; display: none;
-    animation: glitch 0.3s infinite alternate;
-  }
-  @keyframes glitch {
-    0% { transform: translateX(-50%) translate(0); }
-    20% { transform: translateX(-50%) translate(-2px, 2px); }
-    40% { transform: translateX(-50%) translate(-2px, -2px); }
-    60% { transform: translateX(-50%) translate(2px, 2px); }
-    80% { transform: translateX(-50%) translate(2px, -2px); }
-    100% { transform: translateX(-50%) translate(0); }
-  }
-  
-  #guzarWarning {
-    position: fixed; top: 20px; right: 20px; 
-    color: #00ff88;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 14px;
-    z-index: 10;
-    text-shadow: 0 0 15px #00ff88, 2px 0 0 #ff00ff;
-    animation: blink 0.5s infinite alternate;
-  }
-  @keyframes blink {
-    from { opacity: 1; }
-    to { opacity: 0.6; }
-  }
-  
-  #endScreen {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    display: none; justify-content: center; align-items: center;
-    z-index: 100; flex-direction: column;
-    background: rgba(5,5,16,0.85);
-    background-image: 
-      linear-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 240, 255, 0.1) 1px, transparent 1px);
-    background-size: 40px 40px;
-  }
-  
-  .certificate {
-    padding: 40px 60px;
-    text-align: center;
-    animation: appear 0.5s ease-out;
-    font-family: 'VT323', monospace;
-    max-width: 600px;
-    border: 3px solid;
-    position: relative;
-  }
-  
-  @keyframes appear {
-    from { transform: scale(0); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
-  
-  .approved {
-    background: linear-gradient(135deg, rgba(0,40,20,0.95), rgba(0,80,40,0.95));
-    color: #00ff88;
-    border-color: #00ff88;
-    box-shadow: 0 0 60px #00ff88, inset 0 0 30px rgba(0,255,136,0.2);
-  }
-  .rejected {
-    background: linear-gradient(135deg, rgba(40,0,20,0.95), rgba(80,0,40,0.95));
-    color: #ff0066;
-    border-color: #ff0066;
-    box-shadow: 0 0 60px #ff0066, inset 0 0 30px rgba(255,0,102,0.2);
-  }
-  
-  .certificate h1 { 
-    font-family: 'Press Start 2P', monospace;
-    font-size: 28px; 
-    margin-bottom: 20px;
-    text-shadow: 0 0 20px currentColor, 3px 0 0 #00f0ff, -3px 0 0 #ff00ff;
-  }
-  .certificate p { font-size: 24px; margin: 10px 0; }
-  .certificate button {
-    margin-top: 25px; 
-    padding: 15px 40px; 
-    font-size: 18px;
-    font-family: 'Press Start 2P', monospace;
-    background: transparent; 
-    color: currentColor; 
-    border: 2px solid currentColor;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: all 0.2s;
-    box-shadow: 0 0 20px currentColor;
-  }
-  .certificate button:hover { 
-    background: currentColor;
-    color: #000;
-    transform: scale(1.05);
-  }
-  
-  /* TITLE SCREEN */
-  #title {
-    position: fixed; top: 0; left: 0; 
-    width: 100%; height: 100%;
-    z-index: 50;
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background: #050510;
-    overflow: hidden;
-  }
-  
-  #title .grid-bg {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background-image: 
-      linear-gradient(rgba(0, 240, 255, 0.2) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 240, 255, 0.2) 1px, transparent 1px);
-    background-size: 50px 50px;
-    animation: gridMove 20s linear infinite;
-  }
-  
-  @keyframes gridMove {
-    from { background-position: 0 0; }
-    to { background-position: 50px 50px; }
-  }
-  
-  #title::before {
-    content: '';
-    position: absolute;
-    bottom: 30%;
-    left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #ff00ff, #00f0ff, #ff00ff, transparent);
-    box-shadow: 0 0 30px #ff00ff, 0 0 60px #00f0ff;
-    z-index: 0;
-  }
-  
-  #title h1 {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 56px;
-    text-align: center;
-    background: linear-gradient(180deg, #ff66ff 0%, #ff00ff 50%, #aa00ff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: 
-      4px 0 0 rgba(0, 240, 255, 0.7),
-      -4px 0 0 rgba(255, 255, 0, 0.7),
-      0 0 40px rgba(255, 0, 255, 0.8);
-    margin-bottom: 15px;
-    line-height: 1.3;
-    position: relative;
-    z-index: 2;
-    animation: titleGlitch 4s infinite;
-    filter: drop-shadow(0 0 20px #ff00ff);
-  }
-  
-  @keyframes titleGlitch {
-    0%, 90%, 100% { transform: translate(0); }
-    92% { transform: translate(-3px, 1px); }
-    94% { transform: translate(3px, -1px); }
-    96% { transform: translate(-2px, -1px); }
-    98% { transform: translate(2px, 2px); }
-  }
-  
-  #title .subtitle {
-    font-family: 'VT323', monospace;
-    font-size: 26px;
-    color: #00f0ff;
-    text-shadow: 0 0 15px #00f0ff, 2px 0 0 #ff00ff;
-    margin-bottom: 40px;
-    letter-spacing: 3px;
-    z-index: 2;
-    position: relative;
-  }
-  
-  .card-row {
-    display: flex;
-    gap: 25px;
-    margin-bottom: 50px;
-    z-index: 2;
-    position: relative;
-    flex-wrap: wrap;
-    justify-content: center;
-    padding: 0 20px;
-  }
-  
-  .info-card {
-    width: 180px;
-    padding: 20px 15px;
-    background: rgba(10, 10, 30, 0.7);
-    border: 2px solid;
-    text-align: center;
-    font-family: 'VT323', monospace;
-    backdrop-filter: blur(2px);
-    transition: transform 0.3s;
-  }
-  
-  .info-card:hover { transform: translateY(-5px); }
-  
-  .info-card.pink { 
-    border-color: #ff00ff; 
-    box-shadow: 0 0 20px rgba(255,0,255,0.5), inset 0 0 15px rgba(255,0,255,0.1);
-  }
-  .info-card.yellow { 
-    border-color: #ffff00; 
-    box-shadow: 0 0 20px rgba(255,255,0,0.5), inset 0 0 15px rgba(255,255,0,0.1);
-  }
-  .info-card.blue { 
-    border-color: #00f0ff; 
-    box-shadow: 0 0 20px rgba(0,240,255,0.5), inset 0 0 15px rgba(0,240,255,0.1);
-  }
-  
-  .info-card .icon {
-    font-size: 40px;
-    margin-bottom: 10px;
-    display: block;
-  }
-  .info-card.pink .icon { color: #ff00ff; text-shadow: 0 0 15px #ff00ff; }
-  .info-card.yellow .icon { color: #ffff00; text-shadow: 0 0 15px #ffff00; }
-  .info-card.blue .icon { color: #00f0ff; text-shadow: 0 0 15px #00f0ff; }
-  
-  .info-card .label {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 10px;
-    color: #fff;
-    margin-bottom: 8px;
-    letter-spacing: 1px;
-  }
-  .info-card .desc {
-    font-size: 18px;
-    color: #ccc;
-    line-height: 1.2;
-  }
-  
-  .player-info {
-    color: #00f0ff;
-    font-family: 'VT323', monospace;
-    font-size: 20px;
-    margin-bottom: 20px;
-    z-index: 2;
-    position: relative;
-    text-align: center;
-  }
-  .player-info span { color: #ffff00; }
-  
-  #startBtn {
-    position: relative;
-    padding: 22px 80px;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 24px;
-    color: #fff;
-    background: linear-gradient(90deg, #00f0ff, #ff00ff);
-    border: none;
-    cursor: pointer;
-    letter-spacing: 4px;
-    text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
-    box-shadow: 
-      0 0 30px #00f0ff,
-      0 0 60px #ff00ff,
-      inset 0 0 20px rgba(255,255,255,0.2);
-    z-index: 2;
-    transition: transform 0.2s;
-    clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
-  }
-  
-  #startBtn:hover {
-    transform: scale(1.08);
-    animation: btnPulse 0.5s infinite alternate;
-  }
-  
-  @keyframes btnPulse {
-    from { box-shadow: 0 0 30px #00f0ff, 0 0 60px #ff00ff; }
-    to { box-shadow: 0 0 50px #00f0ff, 0 0 100px #ff00ff; }
-  }
-  
-  #confetti {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none; z-index: 99;
-  }
-  
-  .vhs-bar {
-    position: fixed;
-    left: 0; right: 0;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.05);
-    z-index: 9997;
-    pointer-events: none;
-    animation: vhsScan 8s linear infinite;
-  }
-  
-  @keyframes vhsScan {
-    from { top: -10px; }
-    to { top: 110%; }
-  }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;font-family:'Courier New',monospace;color:#ccc;overflow:hidden;height:100vh;width:100vw}
+
+#header{position:absolute;top:0;left:0;right:0;z-index:20;padding:10px 16px;
+  background:linear-gradient(180deg,rgba(10,10,10,1) 65%,transparent);
+  display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+#header h1{font-size:.95rem;letter-spacing:3px;color:#fff;font-weight:bold}
+#header p{font-size:.6rem;color:#444;margin-top:3px;letter-spacing:1px}
+#controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#search{background:transparent;border:1px solid #2a2a2a;color:#bbb;
+  padding:5px 10px;border-radius:2px;font-family:'Courier New',monospace;
+  font-size:.68rem;width:180px;outline:none;letter-spacing:1px}
+#search::placeholder{color:#333}
+#search:focus{border-color:#555}
+.btn{background:transparent;border:1px solid #2a2a2a;color:#666;
+  padding:5px 11px;border-radius:2px;cursor:pointer;
+  font-family:'Courier New',monospace;font-size:.65rem;letter-spacing:1px;transition:all .15s}
+.btn:hover{border-color:#888;color:#ddd}
+.btn.on{border-color:#999;color:#eee;background:rgba(255,255,255,.04)}
+
+#bottom{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  z-index:20;display:flex;gap:6px}
+
+#legend{position:absolute;bottom:52px;right:14px;z-index:20;
+  font-size:.6rem;color:#333;text-align:right;line-height:1.9}
+
+#tip{position:absolute;z-index:40;display:none;
+  background:#141414;border:1px solid #2a2a2a;border-radius:3px;
+  padding:10px 14px;font-size:.7rem;max-width:260px;pointer-events:none;
+  box-shadow:0 4px 24px rgba(0,0,0,.7)}
+#tip .tip-lv{font-size:.58rem;letter-spacing:2px;color:#444;text-transform:uppercase;margin-bottom:2px}
+#tip .tip-nm{color:#eee;font-weight:bold;font-size:.78rem;margin-bottom:5px}
+#tip .tip-tp{color:#666;line-height:1.55;font-size:.67rem}
+
+#jmodal{display:none;position:absolute;inset:0;z-index:60;
+  background:rgba(0,0,0,.93);align-items:center;justify-content:center}
+#jmodal.open{display:flex}
+#jbox{background:#111;border:1px solid #222;border-radius:3px;
+  width:83%;max-width:840px;max-height:84vh;display:flex;flex-direction:column}
+#jhdr{padding:11px 16px;border-bottom:1px solid #1e1e1e;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+#jhdr h3{font-size:.72rem;letter-spacing:2px;color:#888}
+#jbody{overflow-y:auto;flex:1;padding:14px;font-size:.64rem;
+  color:#4ec9b0;white-space:pre;line-height:1.6;font-family:'Courier New',monospace}
+#jbody::-webkit-scrollbar{width:5px}
+#jbody::-webkit-scrollbar-thumb{background:#222;border-radius:3px}
+
+/* graph */
+svg{width:100vw;height:100vh;cursor:grab}
+svg:active{cursor:grabbing}
+.tree-link{fill:none}
+.nd-label{pointer-events:none;font-family:'Courier New',monospace;
+  paint-order:stroke;stroke:#0a0a0a;stroke-width:2.8px;stroke-linejoin:round}
+.sk-lbl{opacity:0;transition:opacity .25s}
+.sk-lbl.show{opacity:1}
 </style>
 </head>
 <body>
 
-<div class="vhs-bar"></div>
+<div id="header">
+  <div>
+    <h1>TAARA ─── COMPLETE CAREER SKILL MAP</h1>
+    <p id="stat-line">Loading…</p>
+  </div>
+  <div id="controls">
+    <input id="search" type="text" placeholder="Search any career…">
+    <button class="btn" id="btnLbl">SHOW SKILL LABELS</button>
+    <button class="btn" id="btnJson">EXPORT AI JSON</button>
+    <button class="btn" id="btnRst">RESET VIEW</button>
+  </div>
+</div>
 
-<!-- ============ GATEPASS REQUEST FORM ============ -->
-<div id="formScreen">
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  
-  <div class="form-card">
-    <div class="form-label-tag">FORM // GP-001</div>
-    <h1 class="form-title">GATEPASS REQUEST</h1>
-    <div class="form-divider"></div>
-    
-    <div class="input-group">
-      <label class="input-label">▸ STUDENT NAME</label>
-      <input type="text" id="studentName" class="cyber-input" placeholder="Enter your full name..." maxlength="40">
-    </div>
-    
-    <div class="input-group">
-      <label class="input-label">▸ REASON FOR EXIT</label>
-      <textarea id="reason" class="cyber-textarea" placeholder="State your reason..." maxlength="200"></textarea>
-      <div class="char-counter"><span id="charCount">0</span> / 200</div>
-    </div>
-    
-    <div class="input-group">
-      <label class="input-label">▸ URGENCY LEVEL</label>
-      <div class="urgency-row">
-        <button class="urgency-btn casual" data-level="casual">CASUAL</button>
-        <button class="urgency-btn urgent" data-level="urgent">URGENT</button>
-        <button class="urgency-btn life" data-level="life">LIFE / DEATH</button>
+<div id="tip">
+  <div class="tip-lv" id="tLv"></div>
+  <div class="tip-nm" id="tNm"></div>
+  <div class="tip-tp" id="tTp"></div>
+</div>
+
+<div id="jmodal">
+  <div id="jbox">
+    <div id="jhdr">
+      <h3>AI ANALYSER JSON — PASTE INTO TASK 3 SYSTEM PROMPT</h3>
+      <div style="display:flex;gap:6px">
+        <button class="btn" id="btnCopy">COPY ALL</button>
+        <button class="btn" id="btnClose">✕ CLOSE</button>
       </div>
     </div>
-    
-    <button class="submit-btn" id="submitBtn">SUBMIT FOR AI REVIEW →</button>
-    <div class="form-error" id="formError"></div>
+    <div id="jbody"></div>
   </div>
 </div>
 
-<!-- ============ AI REVIEW LOADING ============ -->
-<div id="reviewScreen">
-  <div class="review-text">▸ AI REVIEWING REQUEST</div>
-  <div class="loading-bar"><div class="loading-bar-fill" id="loadingBarFill"></div></div>
-  <div class="review-status" id="reviewStatus">Initializing...</div>
+<div id="legend">
+  ◉ Domain &nbsp;|&nbsp; ● Cluster &nbsp;|&nbsp; · Skill<br>
+  <span style="color:#222">Hover = info &nbsp;|&nbsp; Search = highlight &nbsp;|&nbsp; Scroll = zoom</span>
 </div>
 
-<!-- ============ TITLE SCREEN ============ -->
-<div id="title">
-  <div class="grid-bg"></div>
-  <h1>UNIVERSITY<br>GATEPASS<br>RUNNER</h1>
-  <div class="subtitle">&gt; CYBER EDITION v2.0 _</div>
-  
-  <div class="player-info" id="playerInfoDisplay"></div>
-  
-  <div class="card-row">
-    <div class="info-card pink">
-      <span class="icon">◈</span>
-      <div class="label">COLLECT</div>
-      <div class="desc">375 PTS<br>OF ID CARDS</div>
-    </div>
-    <div class="info-card yellow">
-      <span class="icon">◢◣</span>
-      <div class="label">DODGE</div>
-      <div class="desc">GUARDS<br>BARRICADES</div>
-    </div>
-    <div class="info-card blue">
-      <span class="icon">▲</span>
-      <div class="label">JUMP</div>
-      <div class="desc">THE MAIN<br>GATE</div>
-    </div>
-  </div>
-  
-  <button id="startBtn" onclick="startGame()">▶ START</button>
+<svg id="graph"></svg>
+
+<div id="bottom">
+  <button class="btn" onclick="zIn()">＋ ZOOM</button>
+  <button class="btn" onclick="zOut()">－ ZOOM</button>
 </div>
 
-<div id="hud" style="display:none;">
-  <div>SCORE: <span id="score">0</span></div>
-  <div style="font-size:10px; margin-top:5px;">GOAL: 375 PTS</div>
-  <div id="progress"><div id="progressBar"></div></div>
-</div>
-
-<div id="guzarWarning" style="display:none;">🚔 GUZAR ON YOUR TAIL 🚔</div>
-
-<div id="instructions" style="display:none;">
-  ← → / A,D : LANES &nbsp;|&nbsp; SPACE : JUMP
-</div>
-
-<div id="gateAlert">⚠ MAIN GATE - JUMP! ⚠</div>
-
-<div id="endScreen">
-  <canvas id="confetti"></canvas>
-  <div id="certificate" class="certificate"></div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// ============ FORM HANDLING ============
-let playerData = {
-  name: '',
-  reason: '',
-  urgency: ''
-};
+// ═══════════════════════════════════════════════════════════════════
+// COMPLETE SKILL MAP DATA — 24 CAREER DOMAINS
+// ═══════════════════════════════════════════════════════════════════
+const DATA=[
 
-const reasonInput = document.getElementById('reason');
-const charCount = document.getElementById('charCount');
+// ────────────────────── D01: Creative & Handicrafts ────────────────
+{id:"D01",parent:"ROOT",depth:1,name:"Creative &\nHandicrafts",desc:"Art, craft, design and traditional Indian handicraft skills"},
+{id:"C01_01",parent:"D01",depth:2,name:"Textile &\nEmbroidery",topics:["fabric types","thread and needle selection","colour theory","stitch techniques","traditional embroidery styles","fabric dyeing methods"]},
+  {id:"S01_01_01",parent:"C01_01",depth:3,name:"Embroidery Work"},
+  {id:"S01_01_02",parent:"C01_01",depth:3,name:"Handloom Weaving"},
+  {id:"S01_01_03",parent:"C01_01",depth:3,name:"Tailoring & Dressmaking"},
+  {id:"S01_01_04",parent:"C01_01",depth:3,name:"Fabric Dyeing & Printing"},
+  {id:"S01_01_05",parent:"C01_01",depth:3,name:"Knitting & Crochet"},
+{id:"C01_02",parent:"D01",depth:2,name:"Woodcraft &\nCarpentry",topics:["wood species","hand and power tools","joinery methods","surface finishing","structural design"]},
+  {id:"S01_02_01",parent:"C01_02",depth:3,name:"Wood Carving"},
+  {id:"S01_02_02",parent:"C01_02",depth:3,name:"Furniture Making"},
+  {id:"S01_02_03",parent:"C01_02",depth:3,name:"Bamboo & Cane Craft"},
+  {id:"S01_02_04",parent:"C01_02",depth:3,name:"Wooden Toy Making"},
+{id:"C01_03",parent:"D01",depth:2,name:"Pottery &\nCeramics",topics:["clay types","wheel throwing","kiln firing","glazing","drying process"]},
+  {id:"S01_03_01",parent:"C01_03",depth:3,name:"Pottery Wheel"},
+  {id:"S01_03_02",parent:"C01_03",depth:3,name:"Terracotta Art"},
+  {id:"S01_03_03",parent:"C01_03",depth:3,name:"Ceramic Glazing"},
+  {id:"S01_03_04",parent:"C01_03",depth:3,name:"Clay Sculpture"},
+{id:"C01_04",parent:"D01",depth:2,name:"Jewelry Making",topics:["metal types","gemstone setting","design","tools","polishing"]},
+  {id:"S01_04_01",parent:"C01_04",depth:3,name:"Metal Jewelry"},
+  {id:"S01_04_02",parent:"C01_04",depth:3,name:"Bead & Thread Jewelry"},
+  {id:"S01_04_03",parent:"C01_04",depth:3,name:"Imitation Jewelry"},
+  {id:"S01_04_04",parent:"C01_04",depth:3,name:"Stone Setting & Lapidary"},
+{id:"C01_05",parent:"D01",depth:2,name:"Painting &\nFine Art",topics:["colour theory","composition","painting mediums","perspective","Indian folk and tribal art forms"]},
+  {id:"S01_05_01",parent:"C01_05",depth:3,name:"Folk & Tribal Art"},
+  {id:"S01_05_02",parent:"C01_05",depth:3,name:"Wall Murals & Decor"},
+  {id:"S01_05_03",parent:"C01_05",depth:3,name:"Sketching & Drawing"},
+  {id:"S01_05_04",parent:"C01_05",depth:3,name:"Digital Illustration"},
 
-reasonInput.addEventListener('input', () => {
-  charCount.textContent = reasonInput.value.length;
-  if (reasonInput.value.length > 180) {
-    charCount.style.color = '#ff0066';
-  } else {
-    charCount.style.color = '#00f0ff';
+// ────────────────────── D02: Technology & IT ───────────────────────
+{id:"D02",parent:"ROOT",depth:1,name:"Technology\n& IT",desc:"Digital skills, software, hardware and internet technologies"},
+{id:"C02_01",parent:"D02",depth:2,name:"Web\nDevelopment",topics:["HTML and CSS","JavaScript","frontend frameworks","backend development","databases","deployment"]},
+  {id:"S02_01_01",parent:"C02_01",depth:3,name:"Frontend Development"},
+  {id:"S02_01_02",parent:"C02_01",depth:3,name:"Backend Development"},
+  {id:"S02_01_03",parent:"C02_01",depth:3,name:"CMS & WordPress"},
+  {id:"S02_01_04",parent:"C02_01",depth:3,name:"UI/UX Design"},
+{id:"C02_02",parent:"D02",depth:2,name:"Data &\nAnalytics",topics:["spreadsheets","SQL","Python for data","data visualisation","business intelligence"]},
+  {id:"S02_02_01",parent:"C02_02",depth:3,name:"Data Entry & Processing"},
+  {id:"S02_02_02",parent:"C02_02",depth:3,name:"Data Analysis (SQL/Python)"},
+  {id:"S02_02_03",parent:"C02_02",depth:3,name:"AI & ML Basics"},
+  {id:"S02_02_04",parent:"C02_02",depth:3,name:"Database Management"},
+{id:"C02_03",parent:"D02",depth:2,name:"Hardware &\nNetworking",topics:["hardware components","networking protocols","troubleshooting","installation","security"]},
+  {id:"S02_03_01",parent:"C02_03",depth:3,name:"Computer Repair"},
+  {id:"S02_03_02",parent:"C02_03",depth:3,name:"Network Setup & Admin"},
+  {id:"S02_03_03",parent:"C02_03",depth:3,name:"Mobile Phone Repair"},
+  {id:"S02_03_04",parent:"C02_03",depth:3,name:"CCTV & Security Systems"},
+{id:"C02_04",parent:"D02",depth:2,name:"Digital\nMarketing",topics:["social media strategy","SEO","paid advertising","content creation","analytics and reporting"]},
+  {id:"S02_04_01",parent:"C02_04",depth:3,name:"Social Media Management"},
+  {id:"S02_04_02",parent:"C02_04",depth:3,name:"SEO & Content Writing"},
+  {id:"S02_04_03",parent:"C02_04",depth:3,name:"E-commerce Selling"},
+  {id:"S02_04_04",parent:"C02_04",depth:3,name:"Email Marketing"},
+{id:"C02_05",parent:"D02",depth:2,name:"Cybersecurity",topics:["cyber threats","prevention techniques","ethical hacking basics","network security","data privacy laws"]},
+  {id:"S02_05_01",parent:"C02_05",depth:3,name:"Ethical Hacking Basics"},
+  {id:"S02_05_02",parent:"C02_05",depth:3,name:"Network Security"},
+  {id:"S02_05_03",parent:"C02_05",depth:3,name:"Cyber Law & Data Privacy"},
+
+// ────────────────────── D03: Agriculture & Environment ─────────────
+{id:"D03",parent:"ROOT",depth:1,name:"Agriculture &\nEnvironment",desc:"Farming, nature-based livelihoods and environmental work"},
+{id:"C03_01",parent:"D03",depth:2,name:"Crop Management",topics:["soil science","seed selection","irrigation","fertilisers","pest control","harvesting methods"]},
+  {id:"S03_01_01",parent:"C03_01",depth:3,name:"Organic Farming"},
+  {id:"S03_01_02",parent:"C03_01",depth:3,name:"Irrigation & Water Management"},
+  {id:"S03_01_03",parent:"C03_01",depth:3,name:"Crop Protection & Pest Control"},
+  {id:"S03_01_04",parent:"C03_01",depth:3,name:"Soil Testing & Fertility"},
+{id:"C03_02",parent:"D03",depth:2,name:"Animal Husbandry",topics:["livestock breeds","animal feeding","veterinary basics","housing","productivity and breeding"]},
+  {id:"S03_02_01",parent:"C03_02",depth:3,name:"Dairy Farming"},
+  {id:"S03_02_02",parent:"C03_02",depth:3,name:"Poultry Farming"},
+  {id:"S03_02_03",parent:"C03_02",depth:3,name:"Fisheries & Aquaculture"},
+  {id:"S03_02_04",parent:"C03_02",depth:3,name:"Goat & Sheep Farming"},
+{id:"C03_03",parent:"D03",depth:2,name:"Agro-Processing\n& Business",topics:["value addition","food safety","packaging","cold chain management","agri-business finance"]},
+  {id:"S03_03_01",parent:"C03_03",depth:3,name:"Food Processing"},
+  {id:"S03_03_02",parent:"C03_03",depth:3,name:"Horticulture & Nursery"},
+  {id:"S03_03_03",parent:"C03_03",depth:3,name:"Agri-Business Management"},
+
+// ────────────────────── D04: Trade & Commerce ──────────────────────
+{id:"D04",parent:"ROOT",depth:1,name:"Trade &\nCommerce",desc:"Business, finance, entrepreneurship and supply chain management"},
+{id:"C04_01",parent:"D04",depth:2,name:"Entrepreneurship",topics:["business planning","market research","funding options","operations management","risk"]},
+  {id:"S04_01_01",parent:"C04_01",depth:3,name:"Business Planning"},
+  {id:"S04_01_02",parent:"C04_01",depth:3,name:"SHG & Micro Finance"},
+  {id:"S04_01_03",parent:"C04_01",depth:3,name:"Retail & Shop Management"},
+  {id:"S04_01_04",parent:"C04_01",depth:3,name:"Franchise Operations"},
+{id:"C04_02",parent:"D04",depth:2,name:"Accounting\n& Finance",topics:["bookkeeping","taxation","banking products","GST","financial planning"]},
+  {id:"S04_02_01",parent:"C04_02",depth:3,name:"Bookkeeping & Tally"},
+  {id:"S04_02_02",parent:"C04_02",depth:3,name:"Tax & GST Filing"},
+  {id:"S04_02_03",parent:"C04_02",depth:3,name:"Banking & Insurance"},
+  {id:"S04_02_04",parent:"C04_02",depth:3,name:"Financial Planning"},
+{id:"C04_03",parent:"D04",depth:2,name:"Supply Chain\n& Logistics",topics:["procurement","warehousing","inventory management","delivery operations","export-import"]},
+  {id:"S04_03_01",parent:"C04_03",depth:3,name:"Warehousing & Storage"},
+  {id:"S04_03_02",parent:"C04_03",depth:3,name:"Last Mile Delivery"},
+  {id:"S04_03_03",parent:"C04_03",depth:3,name:"Export & Import Basics"},
+
+// ────────────────────── D05: Health & Wellness ─────────────────────
+{id:"D05",parent:"ROOT",depth:1,name:"Health &\nWellness",desc:"Healthcare services, wellness, nutrition and community health"},
+{id:"C05_01",parent:"D05",depth:2,name:"Nursing &\nPatient Care",topics:["clinical procedures","patient communication","medication basics","infection control","emergency response"]},
+  {id:"S05_01_01",parent:"C05_01",depth:3,name:"ANM / GNM Nursing"},
+  {id:"S05_01_02",parent:"C05_01",depth:3,name:"Home Care Attendant"},
+  {id:"S05_01_03",parent:"C05_01",depth:3,name:"Lab & Phlebotomy"},
+  {id:"S05_01_04",parent:"C05_01",depth:3,name:"First Aid & Emergency Care"},
+{id:"C05_02",parent:"D05",depth:2,name:"Ayurveda &\nHerbal",topics:["medicinal herbs","formulation basics","dosha concept","natural product making","lifestyle counselling"]},
+  {id:"S05_02_01",parent:"C05_02",depth:3,name:"Herbal Product Making"},
+  {id:"S05_02_02",parent:"C05_02",depth:3,name:"Yoga & Meditation Instruction"},
+  {id:"S05_02_03",parent:"C05_02",depth:3,name:"Naturopathy Basics"},
+{id:"C05_03",parent:"D05",depth:2,name:"Community Health",topics:["public health programs","nutrition","mental health awareness","sanitation","government health schemes"]},
+  {id:"S05_03_01",parent:"C05_03",depth:3,name:"ASHA / Health Worker"},
+  {id:"S05_03_02",parent:"C05_03",depth:3,name:"Nutrition & Dietetics"},
+  {id:"S05_03_03",parent:"C05_03",depth:3,name:"Mental Health Support"},
+
+// ────────────────────── D06: Construction & Engineering ────────────
+{id:"D06",parent:"ROOT",depth:1,name:"Construction &\nEngineering",desc:"Skilled trades, infrastructure and technical engineering"},
+{id:"C06_01",parent:"D06",depth:2,name:"Welding &\nFabrication",topics:["welding processes","metals and alloys","safety protocols","equipment operation","weld quality inspection"]},
+  {id:"S06_01_01",parent:"C06_01",depth:3,name:"Arc / MIG Welding"},
+  {id:"S06_01_02",parent:"C06_01",depth:3,name:"Sheet Metal Fabrication"},
+  {id:"S06_01_03",parent:"C06_01",depth:3,name:"Fitter & Machinist"},
+  {id:"S06_01_04",parent:"C06_01",depth:3,name:"Pipeline Welding"},
+{id:"C06_02",parent:"D06",depth:2,name:"Electrical Work",topics:["circuit theory","wiring systems","electrical safety","installation standards","energy efficiency"]},
+  {id:"S06_02_01",parent:"C06_02",depth:3,name:"House Wiring"},
+  {id:"S06_02_02",parent:"C06_02",depth:3,name:"Industrial Electrical"},
+  {id:"S06_02_03",parent:"C06_02",depth:3,name:"Solar Panel Installation"},
+  {id:"S06_02_04",parent:"C06_02",depth:3,name:"Electrical Appliance Repair"},
+{id:"C06_03",parent:"D06",depth:2,name:"Civil &\nMasonry",topics:["construction materials","structural work","surface finishing","cost estimation","site safety"]},
+  {id:"S06_03_01",parent:"C06_03",depth:3,name:"Masonry & Plastering"},
+  {id:"S06_03_02",parent:"C06_03",depth:3,name:"Plumbing & Sanitation"},
+  {id:"S06_03_03",parent:"C06_03",depth:3,name:"Civil Carpentry"},
+  {id:"S06_03_04",parent:"C06_03",depth:3,name:"Interior Finishing & Tiling"},
+
+// ────────────────────── D07: Education & Social Work ───────────────
+{id:"D07",parent:"ROOT",depth:1,name:"Education &\nSocial Work",desc:"Teaching, community development, counselling and social services"},
+{id:"C07_01",parent:"D07",depth:2,name:"Teaching\n& Tutoring",topics:["pedagogy","subject knowledge","lesson planning","classroom management","student assessment"]},
+  {id:"S07_01_01",parent:"C07_01",depth:3,name:"Primary School Teaching"},
+  {id:"S07_01_02",parent:"C07_01",depth:3,name:"Coaching & Tutoring"},
+  {id:"S07_01_03",parent:"C07_01",depth:3,name:"Vocational Training"},
+  {id:"S07_01_04",parent:"C07_01",depth:3,name:"Special Education"},
+{id:"C07_02",parent:"D07",depth:2,name:"Social &\nCommunity Work",topics:["community mobilisation","program management","welfare schemes","documentation and reporting","child development"]},
+  {id:"S07_02_01",parent:"C07_02",depth:3,name:"NGO & Development Work"},
+  {id:"S07_02_02",parent:"C07_02",depth:3,name:"Counselling & Guidance"},
+  {id:"S07_02_03",parent:"C07_02",depth:3,name:"Child Development & Care"},
+  {id:"S07_02_04",parent:"C07_02",depth:3,name:"Adult Literacy Facilitation"},
+
+// ────────────────────── D08: Media & Communication ─────────────────
+{id:"D08",parent:"ROOT",depth:1,name:"Media &\nCommunication",desc:"Journalism, photography, video production and public communication"},
+{id:"C08_01",parent:"D08",depth:2,name:"Journalism\n& Reporting",topics:["news writing","interviewing","media ethics","fact-checking","media law","digital journalism"]},
+  {id:"S08_01_01",parent:"C08_01",depth:3,name:"Print Journalism"},
+  {id:"S08_01_02",parent:"C08_01",depth:3,name:"Digital News & Blogging"},
+  {id:"S08_01_03",parent:"C08_01",depth:3,name:"Community Radio"},
+  {id:"S08_01_04",parent:"C08_01",depth:3,name:"Investigative Reporting"},
+{id:"C08_02",parent:"D08",depth:2,name:"Photography\n& Video",topics:["camera settings","composition rules","lighting","editing software","visual storytelling"]},
+  {id:"S08_02_01",parent:"C08_02",depth:3,name:"Photography"},
+  {id:"S08_02_02",parent:"C08_02",depth:3,name:"Video Editing & Production"},
+  {id:"S08_02_03",parent:"C08_02",depth:3,name:"Film Making Basics"},
+{id:"C08_03",parent:"D08",depth:2,name:"Public\nCommunication",topics:["verbal delivery","body language","stage presence","language skills","audience engagement"]},
+  {id:"S08_03_01",parent:"C08_03",depth:3,name:"Public Speaking & Oratory"},
+  {id:"S08_03_02",parent:"C08_03",depth:3,name:"Anchoring & MCing"},
+  {id:"S08_03_03",parent:"C08_03",depth:3,name:"Language & Translation"},
+
+// ────────────────────── D09: Physical Fitness & Defence ────────────
+{id:"D09",parent:"ROOT",depth:1,name:"Physical Fitness\n& Defence",desc:"Sports, martial arts, defence services and personal training"},
+{id:"C09_01",parent:"D09",depth:2,name:"Sports &\nAthletics",topics:["training methodology","sports rules","performance metrics","coaching principles","sports nutrition"]},
+  {id:"S09_01_01",parent:"C09_01",depth:3,name:"Track & Field Athletics"},
+  {id:"S09_01_02",parent:"C09_01",depth:3,name:"Team Sports Coaching"},
+  {id:"S09_01_03",parent:"C09_01",depth:3,name:"Swimming & Aquatics"},
+  {id:"S09_01_04",parent:"C09_01",depth:3,name:"Adventure & Outdoor Sports"},
+{id:"C09_02",parent:"D09",depth:2,name:"Martial Arts &\nCombat Sports",topics:["combat techniques","rules and competition","physical conditioning","discipline","sparring"]},
+  {id:"S09_02_01",parent:"C09_02",depth:3,name:"Kabaddi & Wrestling"},
+  {id:"S09_02_02",parent:"C09_02",depth:3,name:"Judo & Karate"},
+  {id:"S09_02_03",parent:"C09_02",depth:3,name:"Boxing & MMA"},
+  {id:"S09_02_04",parent:"C09_02",depth:3,name:"Shooting & Archery"},
+{id:"C09_03",parent:"D09",depth:2,name:"Defence Services\nPreparation",topics:["eligibility criteria","physical fitness standards","written exam syllabus","SSB interview","medical requirements"]},
+  {id:"S09_03_01",parent:"C09_03",depth:3,name:"Indian Army Preparation"},
+  {id:"S09_03_02",parent:"C09_03",depth:3,name:"NDA / CDS Coaching"},
+  {id:"S09_03_03",parent:"C09_03",depth:3,name:"Police & Paramilitary"},
+  {id:"S09_03_04",parent:"C09_03",depth:3,name:"Physical Endurance Training"},
+{id:"C09_04",parent:"D09",depth:2,name:"Fitness &\nPersonal Training",topics:["anatomy basics","exercise programming","client assessment","nutrition","recovery"]},
+  {id:"S09_04_01",parent:"C09_04",depth:3,name:"Gym & Personal Training"},
+  {id:"S09_04_02",parent:"C09_04",depth:3,name:"Sports Nutrition"},
+  {id:"S09_04_03",parent:"C09_04",depth:3,name:"Physiotherapy Basics"},
+  {id:"S09_04_04",parent:"C09_04",depth:3,name:"Yoga & Fitness Coaching"},
+
+// ────────────────────── D10: Performing Arts ───────────────────────
+{id:"D10",parent:"ROOT",depth:1,name:"Performing Arts\n& Entertainment",desc:"Dance, music, acting, comedy, circus and stage performance"},
+{id:"C10_01",parent:"D10",depth:2,name:"Dance",topics:["rhythm and timing","body movement","performance styles","choreography","stage presence","expression"]},
+  {id:"S10_01_01",parent:"C10_01",depth:3,name:"Classical Dance (Bharatnatyam/Kathak)"},
+  {id:"S10_01_02",parent:"C10_01",depth:3,name:"Folk & Traditional Dance"},
+  {id:"S10_01_03",parent:"C10_01",depth:3,name:"Contemporary & Hip-Hop Dance"},
+  {id:"S10_01_04",parent:"C10_01",depth:3,name:"Choreography & Direction"},
+{id:"C10_02",parent:"D10",depth:2,name:"Music & Singing",topics:["ragas and scales","rhythm and taal","vocal training","instruments","music production and composition"]},
+  {id:"S10_02_01",parent:"C10_02",depth:3,name:"Classical Vocal Music"},
+  {id:"S10_02_02",parent:"C10_02",depth:3,name:"Folk & Regional Singing"},
+  {id:"S10_02_03",parent:"C10_02",depth:3,name:"Instrument Playing"},
+  {id:"S10_02_04",parent:"C10_02",depth:3,name:"Music Production & Composition"},
+{id:"C10_03",parent:"D10",depth:2,name:"Theatre &\nActing",topics:["character analysis","dialogue delivery","stage blocking","improvisation","direction","screen acting"]},
+  {id:"S10_03_01",parent:"C10_03",depth:3,name:"Stage Acting"},
+  {id:"S10_03_02",parent:"C10_03",depth:3,name:"Film & TV Acting"},
+  {id:"S10_03_03",parent:"C10_03",depth:3,name:"Street Theatre & Nukkad Natak"},
+  {id:"S10_03_04",parent:"C10_03",depth:3,name:"Script Writing & Direction"},
+{id:"C10_04",parent:"D10",depth:2,name:"Comedy &\nSpoken Word",topics:["comedic timing","observation and writing","delivery style","audience reading","spontaneity"]},
+  {id:"S10_04_01",parent:"C10_04",depth:3,name:"Stand-Up Comedy"},
+  {id:"S10_04_02",parent:"C10_04",depth:3,name:"Mimicry & Impersonation"},
+  {id:"S10_04_03",parent:"C10_04",depth:3,name:"Storytelling & Oral Tradition"},
+  {id:"S10_04_04",parent:"C10_04",depth:3,name:"Motivational Speaking"},
+{id:"C10_05",parent:"D10",depth:2,name:"Circus &\nStreet Performance",topics:["physical skill","props handling","crowd engagement","show structure","performance art"]},
+  {id:"S10_05_01",parent:"C10_05",depth:3,name:"Juggling & Acrobatics"},
+  {id:"S10_05_02",parent:"C10_05",depth:3,name:"Magic & Illusion Shows"},
+  {id:"S10_05_03",parent:"C10_05",depth:3,name:"Puppetry & Shadow Theatre"},
+  {id:"S10_05_04",parent:"C10_05",depth:3,name:"Street Art & Body Painting"},
+
+// ────────────────────── D11: Government & Civil Services ───────────
+{id:"D11",parent:"ROOT",depth:1,name:"Government &\nCivil Services",desc:"UPSC, state civil services, railways, banking and government exams"},
+{id:"C11_01",parent:"D11",depth:2,name:"UPSC Civil\nServices",topics:["UPSC CSE exam pattern","general studies syllabus","optional subject selection","CSAT preparation","answer writing practice","interview and personality test"]},
+  {id:"S11_01_01",parent:"C11_01",depth:3,name:"IAS Preparation"},
+  {id:"S11_01_02",parent:"C11_01",depth:3,name:"IPS Preparation"},
+  {id:"S11_01_03",parent:"C11_01",depth:3,name:"IFS (Foreign Service) Prep"},
+  {id:"S11_01_04",parent:"C11_01",depth:3,name:"IRS (Revenue Service) Prep"},
+{id:"C11_02",parent:"D11",depth:2,name:"State & Central\nGovt Services",topics:["state PCS exam patterns","SSC exam syllabus","reasoning and quantitative aptitude","English and Hindi proficiency","current affairs","state-specific general knowledge"]},
+  {id:"S11_02_01",parent:"C11_02",depth:3,name:"State PCS / PSC Preparation"},
+  {id:"S11_02_02",parent:"C11_02",depth:3,name:"SSC CGL & CHSL Preparation"},
+  {id:"S11_02_03",parent:"C11_02",depth:3,name:"Railway RRB Preparation"},
+  {id:"S11_02_04",parent:"C11_02",depth:3,name:"Panchayati Raj Services"},
+{id:"C11_03",parent:"D11",depth:2,name:"Govt Banking\n& Finance Services",topics:["IBPS and SBI exam pattern","banking awareness","financial markets","reasoning and English","quantitative aptitude","RBI monetary policy"]},
+  {id:"S11_03_01",parent:"C11_03",depth:3,name:"IBPS PO & Clerk Preparation"},
+  {id:"S11_03_02",parent:"C11_03",depth:3,name:"SBI PO Preparation"},
+  {id:"S11_03_03",parent:"C11_03",depth:3,name:"RBI Grade B Preparation"},
+  {id:"S11_03_04",parent:"C11_03",depth:3,name:"LIC & NABARD Preparation"},
+{id:"C11_04",parent:"D11",depth:2,name:"Judicial &\nIntelligence Services",topics:["judicial services exam pattern","law and constitution","code of criminal procedure","intelligence and national security basics","physical and medical eligibility","CAPF exam syllabus"]},
+  {id:"S11_04_01",parent:"C11_04",depth:3,name:"Judicial Magistrate Preparation"},
+  {id:"S11_04_02",parent:"C11_04",depth:3,name:"Intelligence Bureau (IB) ACIO"},
+  {id:"S11_04_03",parent:"C11_04",depth:3,name:"CAPF AC Preparation"},
+  {id:"S11_04_04",parent:"C11_04",depth:3,name:"Revenue Intelligence & CBI"},
+
+// ────────────────────── D12: Law & Justice ─────────────────────────
+{id:"D12",parent:"ROOT",depth:1,name:"Law &\nJustice",desc:"Legal practice, advocacy, judiciary and para-legal services"},
+{id:"C12_01",parent:"D12",depth:2,name:"Legal Practice\n& Advocacy",topics:["legal research","courtroom procedure","evidence and witnesses","case filing","legal drafting","client counselling"]},
+  {id:"S12_01_01",parent:"C12_01",depth:3,name:"Criminal Law Practice"},
+  {id:"S12_01_02",parent:"C12_01",depth:3,name:"Civil & Property Law"},
+  {id:"S12_01_03",parent:"C12_01",depth:3,name:"Corporate & Business Law"},
+  {id:"S12_01_04",parent:"C12_01",depth:3,name:"Family & Matrimonial Law"},
+{id:"C12_02",parent:"D12",depth:2,name:"Specialised\nLegal Fields",topics:["intellectual property rights","patent law","cyber law","data protection","environmental legislation","human rights frameworks"]},
+  {id:"S12_02_01",parent:"C12_02",depth:3,name:"Intellectual Property Rights (IPR)"},
+  {id:"S12_02_02",parent:"C12_02",depth:3,name:"Cyber & Technology Law"},
+  {id:"S12_02_03",parent:"C12_02",depth:3,name:"Environmental & Land Law"},
+  {id:"S12_02_04",parent:"C12_02",depth:3,name:"Human Rights Law"},
+{id:"C12_03",parent:"D12",depth:2,name:"Para-legal &\nCourt Services",topics:["legal document drafting","notary procedure","court filing process","legal aid eligibility","stamp duty","mediation basics"]},
+  {id:"S12_03_01",parent:"C12_03",depth:3,name:"Legal Documentation & Drafting"},
+  {id:"S12_03_02",parent:"C12_03",depth:3,name:"Notary Services"},
+  {id:"S12_03_03",parent:"C12_03",depth:3,name:"Court Stenography"},
+  {id:"S12_03_04",parent:"C12_03",depth:3,name:"Legal Aid Worker"},
+
+// ────────────────────── D13: Professional Finance ──────────────────
+{id:"D13",parent:"ROOT",depth:1,name:"Professional\nFinance",desc:"CA, CS, CFA, stock markets, insurance and actuarial science"},
+{id:"C13_01",parent:"D13",depth:2,name:"Chartered &\nCost Accountancy",topics:["accounting standards","audit procedures","taxation law","cost management","financial reporting","ICAI syllabus"]},
+  {id:"S13_01_01",parent:"C13_01",depth:3,name:"CA (Foundation to Final)"},
+  {id:"S13_01_02",parent:"C13_01",depth:3,name:"CMA Cost Accountant"},
+  {id:"S13_01_03",parent:"C13_01",depth:3,name:"Company Secretary (CS)"},
+  {id:"S13_01_04",parent:"C13_01",depth:3,name:"CPA International Accounting"},
+{id:"C13_02",parent:"D13",depth:2,name:"Investment &\nCapital Markets",topics:["equity and debt markets","technical and fundamental analysis","portfolio theory","SEBI regulations","derivatives","wealth management"]},
+  {id:"S13_02_01",parent:"C13_02",depth:3,name:"Stock Market Trading & Analysis"},
+  {id:"S13_02_02",parent:"C13_02",depth:3,name:"Investment Banking & M&A"},
+  {id:"S13_02_03",parent:"C13_02",depth:3,name:"Portfolio & Wealth Management"},
+  {id:"S13_02_04",parent:"C13_02",depth:3,name:"Chartered Financial Analyst (CFA)"},
+{id:"C13_03",parent:"D13",depth:2,name:"Insurance &\nActuarial Science",topics:["actuarial mathematics","mortality tables","insurance products","risk assessment","underwriting","IRDAI regulations"]},
+  {id:"S13_03_01",parent:"C13_03",depth:3,name:"Actuarial Science"},
+  {id:"S13_03_02",parent:"C13_03",depth:3,name:"Insurance Underwriting"},
+  {id:"S13_03_03",parent:"C13_03",depth:3,name:"Risk & Compliance Management"},
+  {id:"S13_03_04",parent:"C13_03",depth:3,name:"IRDAI Licensed Advisor"},
+
+// ────────────────────── D14: Science & Research ────────────────────
+{id:"D14",parent:"ROOT",depth:1,name:"Science &\nResearch",desc:"Physical sciences, life sciences, space science and forensics"},
+{id:"C14_01",parent:"D14",depth:2,name:"Physical Sciences",topics:["classical mechanics","electromagnetism","nuclear physics","optics","material properties","quantum basics"]},
+  {id:"S14_01_01",parent:"C14_01",depth:3,name:"Physics Research & Academia"},
+  {id:"S14_01_02",parent:"C14_01",depth:3,name:"Nuclear Science & Technology"},
+  {id:"S14_01_03",parent:"C14_01",depth:3,name:"Optics, Photonics & Laser Tech"},
+  {id:"S14_01_04",parent:"C14_01",depth:3,name:"Material Science & Nanotechnology"},
+{id:"C14_02",parent:"D14",depth:2,name:"Life Sciences &\nBiotechnology",topics:["cell biology","genetics and genomics","microbiology","pharmacology","clinical research","laboratory techniques"]},
+  {id:"S14_02_01",parent:"C14_02",depth:3,name:"Biotechnology & Genetic Engineering"},
+  {id:"S14_02_02",parent:"C14_02",depth:3,name:"Microbiology & Virology"},
+  {id:"S14_02_03",parent:"C14_02",depth:3,name:"Pharmacology & Drug Research"},
+  {id:"S14_02_04",parent:"C14_02",depth:3,name:"Ecology & Conservation Biology"},
+{id:"C14_03",parent:"D14",depth:2,name:"Earth &\nSpace Science",topics:["atmospheric science","satellite technology","remote sensing","ISRO programs","oceanography","GIS mapping"]},
+  {id:"S14_03_01",parent:"C14_03",depth:3,name:"ISRO Scientist Preparation"},
+  {id:"S14_03_02",parent:"C14_03",depth:3,name:"Meteorology & Climatology"},
+  {id:"S14_03_03",parent:"C14_03",depth:3,name:"Remote Sensing & GIS"},
+  {id:"S14_03_04",parent:"C14_03",depth:3,name:"Oceanography & Marine Science"},
+{id:"C14_04",parent:"D14",depth:2,name:"Forensic Science",topics:["crime scene investigation","forensic chemistry","DNA analysis","digital forensics","forensic medicine","ballistics and toolmarks"]},
+  {id:"S14_04_01",parent:"C14_04",depth:3,name:"Forensic Crime Scene Analysis"},
+  {id:"S14_04_02",parent:"C14_04",depth:3,name:"Forensic Chemistry & Toxicology"},
+  {id:"S14_04_03",parent:"C14_04",depth:3,name:"Digital & Cyber Forensics"},
+  {id:"S14_04_04",parent:"C14_04",depth:3,name:"Forensic Medicine & Pathology"},
+
+// ────────────────────── D15: Aviation, Aerospace & Maritime ────────
+{id:"D15",parent:"ROOT",depth:1,name:"Aviation, Aerospace\n& Maritime",desc:"Commercial aviation, aerospace engineering, maritime and shipping"},
+{id:"C15_01",parent:"D15",depth:2,name:"Commercial Aviation",topics:["flight principles and aerodynamics","DGCA regulations","navigation systems","aircraft systems","air traffic management","emergency procedures"]},
+  {id:"S15_01_01",parent:"C15_01",depth:3,name:"Commercial Pilot Licence (CPL)"},
+  {id:"S15_01_02",parent:"C15_01",depth:3,name:"Air Traffic Controller (ATC)"},
+  {id:"S15_01_03",parent:"C15_01",depth:3,name:"Aircraft Maintenance Engineer (AME)"},
+  {id:"S15_01_04",parent:"C15_01",depth:3,name:"Cabin Crew & In-flight Services"},
+{id:"C15_02",parent:"D15",depth:2,name:"Aerospace\nEngineering",topics:["aerodynamics","propulsion systems","structural analysis","satellite communication","UAV design","space mission planning"]},
+  {id:"S15_02_01",parent:"C15_02",depth:3,name:"Aerospace Structural Design"},
+  {id:"S15_02_02",parent:"C15_02",depth:3,name:"Rocket & Propulsion Engineering"},
+  {id:"S15_02_03",parent:"C15_02",depth:3,name:"Satellite Systems Engineering"},
+  {id:"S15_02_04",parent:"C15_02",depth:3,name:"UAV & Drone Engineering"},
+{id:"C15_03",parent:"D15",depth:2,name:"Maritime &\nShipping",topics:["seamanship and navigation","marine engines","international maritime law","port operations","cargo handling","coast guard duties"]},
+  {id:"S15_03_01",parent:"C15_03",depth:3,name:"Merchant Navy – Deck Officer"},
+  {id:"S15_03_02",parent:"C15_03",depth:3,name:"Marine Engineering"},
+  {id:"S15_03_03",parent:"C15_03",depth:3,name:"Harbour & Port Management"},
+  {id:"S15_03_04",parent:"C15_03",depth:3,name:"Coast Guard Preparation"},
+
+// ────────────────────── D16: Hospitality, Tourism & Culinary ───────
+{id:"D16",parent:"ROOT",depth:1,name:"Hospitality,\nTourism & Culinary",desc:"Hotel management, culinary arts and travel and tourism industry"},
+{id:"C16_01",parent:"D16",depth:2,name:"Hotel & Resort\nManagement",topics:["front office operations","housekeeping standards","food and beverage service","revenue management","guest relations","hospitality law"]},
+  {id:"S16_01_01",parent:"C16_01",depth:3,name:"Front Office & Guest Relations"},
+  {id:"S16_01_02",parent:"C16_01",depth:3,name:"Housekeeping Operations"},
+  {id:"S16_01_03",parent:"C16_01",depth:3,name:"Food & Beverage Service"},
+  {id:"S16_01_04",parent:"C16_01",depth:3,name:"Hotel Revenue Management"},
+{id:"C16_02",parent:"D16",depth:2,name:"Culinary Arts &\nFood Production",topics:["knife skills and kitchen safety","cooking methods","flavour pairing","bakery science","food plating","FSSAI and hygiene standards"]},
+  {id:"S16_02_01",parent:"C16_02",depth:3,name:"Professional Chef & Cooking"},
+  {id:"S16_02_02",parent:"C16_02",depth:3,name:"Bakery & Pastry Arts"},
+  {id:"S16_02_03",parent:"C16_02",depth:3,name:"Food Styling & Photography"},
+  {id:"S16_02_04",parent:"C16_02",depth:3,name:"Food Technology & Quality Control"},
+{id:"C16_03",parent:"D16",depth:2,name:"Travel &\nTourism",topics:["tourism geography","tour planning","ticketing and reservation systems","customer service","heritage tourism","ecotourism principles"]},
+  {id:"S16_03_01",parent:"C16_03",depth:3,name:"Tour Guide & Interpretation"},
+  {id:"S16_03_02",parent:"C16_03",depth:3,name:"Travel Agent & Ticketing"},
+  {id:"S16_03_03",parent:"C16_03",depth:3,name:"Ecotourism & Responsible Travel"},
+  {id:"S16_03_04",parent:"C16_03",depth:3,name:"Heritage & Cultural Tourism"},
+
+// ────────────────────── D17: Automobile, Transport & EV ────────────
+{id:"D17",parent:"ROOT",depth:1,name:"Automobile,\nTransport & EV",desc:"Vehicle servicing, commercial transport and electric vehicle technology"},
+{id:"C17_01",parent:"D17",depth:2,name:"Automotive\nService & Repair",topics:["engine overhaul","transmission systems","auto electrical and ECU","body denting and painting","diagnostic tools","two-wheeler service"]},
+  {id:"S17_01_01",parent:"C17_01",depth:3,name:"Car Mechanic & Engine Overhaul"},
+  {id:"S17_01_02",parent:"C17_01",depth:3,name:"Auto Electrician & ECU Diagnostics"},
+  {id:"S17_01_03",parent:"C17_01",depth:3,name:"Body Repair, Denting & Painting"},
+  {id:"S17_01_04",parent:"C17_01",depth:3,name:"Two-Wheeler Mechanic"},
+{id:"C17_02",parent:"D17",depth:2,name:"Commercial\nTransport",topics:["heavy vehicle operation","traffic rules and road safety","defensive driving","fleet management","logistics coordination","driving instructor certification"]},
+  {id:"S17_02_01",parent:"C17_02",depth:3,name:"Heavy Motor Vehicle (HMV) Driving"},
+  {id:"S17_02_02",parent:"C17_02",depth:3,name:"Driving Instructor"},
+  {id:"S17_02_03",parent:"C17_02",depth:3,name:"Fleet & Transport Management"},
+  {id:"S17_02_04",parent:"C17_02",depth:3,name:"Road Freight & Logistics"},
+{id:"C17_03",parent:"D17",depth:2,name:"Electric Vehicle\nTechnology",topics:["EV battery chemistry","motor and controller systems","charging infrastructure","EV diagnostics software","hybrid technology","EV conversion process"]},
+  {id:"S17_03_01",parent:"C17_03",depth:3,name:"EV Battery Service & Diagnostics"},
+  {id:"S17_03_02",parent:"C17_03",depth:3,name:"EV Charging Station Setup"},
+  {id:"S17_03_03",parent:"C17_03",depth:3,name:"Hybrid Vehicle Maintenance"},
+  {id:"S17_03_04",parent:"C17_03",depth:3,name:"EV Conversion & Retrofitting"},
+
+// ────────────────────── D18: Beauty, Fashion & Personal Care ────────
+{id:"D18",parent:"ROOT",depth:1,name:"Beauty, Fashion\n& Personal Care",desc:"Hair styling, makeup artistry, fashion design and personal grooming"},
+{id:"C18_01",parent:"D18",depth:2,name:"Hair & Salon\nServices",topics:["hair anatomy and types","cutting techniques","colouring and treatments","salon sanitation","barbering","client consultation"]},
+  {id:"S18_01_01",parent:"C18_01",depth:3,name:"Hair Cutting & Styling"},
+  {id:"S18_01_02",parent:"C18_01",depth:3,name:"Hair Colouring & Treatments"},
+  {id:"S18_01_03",parent:"C18_01",depth:3,name:"Barbering & Men's Grooming"},
+  {id:"S18_01_04",parent:"C18_01",depth:3,name:"Salon Business Management"},
+{id:"C18_02",parent:"D18",depth:2,name:"Beauty &\nMakeup Artistry",topics:["skin types and care","foundation and contouring","bridal makeup techniques","film and stage makeup","nail art","aesthetic treatments"]},
+  {id:"S18_02_01",parent:"C18_02",depth:3,name:"Bridal & Wedding Makeup"},
+  {id:"S18_02_02",parent:"C18_02",depth:3,name:"Film, TV & Stage Makeup"},
+  {id:"S18_02_03",parent:"C18_02",depth:3,name:"Nail Art & Extensions"},
+  {id:"S18_02_04",parent:"C18_02",depth:3,name:"Skin Care & Aesthetic Treatments"},
+{id:"C18_03",parent:"D18",depth:2,name:"Fashion Design\n& Styling",topics:["garment construction","textile selection","fashion illustration","trend forecasting","personal styling","merchandising and buying"]},
+  {id:"S18_03_01",parent:"C18_03",depth:3,name:"Fashion Garment Design"},
+  {id:"S18_03_02",parent:"C18_03",depth:3,name:"Textile & Surface Design"},
+  {id:"S18_03_03",parent:"C18_03",depth:3,name:"Fashion Styling & Wardrobe"},
+  {id:"S18_03_04",parent:"C18_03",depth:3,name:"Fashion Merchandising & Buying"},
+
+// ────────────────────── D19: Real Estate & Architecture ────────────
+{id:"D19",parent:"ROOT",depth:1,name:"Real Estate,\nArchitecture & Design",desc:"Architecture, interior design, real estate brokerage and construction management"},
+{id:"C19_01",parent:"D19",depth:2,name:"Architecture &\nUrban Design",topics:["building design principles","structural systems","AutoCAD and BIM software","green building standards","urban planning","building codes and bye-laws"]},
+  {id:"S19_01_01",parent:"C19_01",depth:3,name:"Architectural Design & Drawing"},
+  {id:"S19_01_02",parent:"C19_01",depth:3,name:"Structural Engineering"},
+  {id:"S19_01_03",parent:"C19_01",depth:3,name:"Green & Sustainable Architecture"},
+  {id:"S19_01_04",parent:"C19_01",depth:3,name:"Urban Planning & Smart Cities"},
+{id:"C19_02",parent:"D19",depth:2,name:"Interior Design",topics:["space planning","furniture selection","colour schemes","lighting design","3D visualisation","Vastu Shastra","client brief to execution"]},
+  {id:"S19_02_01",parent:"C19_02",depth:3,name:"Residential Interior Design"},
+  {id:"S19_02_02",parent:"C19_02",depth:3,name:"Commercial & Office Interior"},
+  {id:"S19_02_03",parent:"C19_02",depth:3,name:"Space Planning & 3D Visualisation"},
+  {id:"S19_02_04",parent:"C19_02",depth:3,name:"Vastu Shastra Consultancy"},
+{id:"C19_03",parent:"D19",depth:2,name:"Real Estate\nBusiness",topics:["property valuation methods","RERA regulations","sale and lease documentation","market analysis","property management","loan and finance linkage"]},
+  {id:"S19_03_01",parent:"C19_03",depth:3,name:"Real Estate Agent & Broker"},
+  {id:"S19_03_02",parent:"C19_03",depth:3,name:"Property Valuation & Appraisal"},
+  {id:"S19_03_03",parent:"C19_03",depth:3,name:"RERA Compliance & Registration"},
+  {id:"S19_03_04",parent:"C19_03",depth:3,name:"Property Management Services"},
+
+// ────────────────────── D20: Emerging & Deep Technology ────────────
+{id:"D20",parent:"ROOT",depth:1,name:"Emerging &\nDeep Technology",desc:"AI, robotics, blockchain, AR/VR, gaming and deep tech careers"},
+{id:"C20_01",parent:"D20",depth:2,name:"Artificial Intelligence\n& Machine Learning",topics:["supervised and unsupervised learning","neural networks","NLP and text processing","computer vision","model deployment","AI ethics and bias"]},
+  {id:"S20_01_01",parent:"C20_01",depth:3,name:"Machine Learning Engineering"},
+  {id:"S20_01_02",parent:"C20_01",depth:3,name:"Natural Language Processing (NLP)"},
+  {id:"S20_01_03",parent:"C20_01",depth:3,name:"Computer Vision & Image AI"},
+  {id:"S20_01_04",parent:"C20_01",depth:3,name:"AI Ethics & Responsible AI"},
+{id:"C20_02",parent:"D20",depth:2,name:"Robotics &\nAutomation",topics:["robotic kinematics","PLC and industrial automation","RPA tools","embedded systems","IoT sensors","drone programming"]},
+  {id:"S20_02_01",parent:"C20_02",depth:3,name:"Industrial Robotics Programming"},
+  {id:"S20_02_02",parent:"C20_02",depth:3,name:"Robotic Process Automation (RPA)"},
+  {id:"S20_02_03",parent:"C20_02",depth:3,name:"Drone & Autonomous Systems"},
+  {id:"S20_02_04",parent:"C20_02",depth:3,name:"Embedded Systems & IoT"},
+{id:"C20_03",parent:"D20",depth:2,name:"Blockchain\n& Web3",topics:["blockchain architecture","consensus mechanisms","smart contract development","DeFi protocols","NFT standards","crypto trading"]},
+  {id:"S20_03_01",parent:"C20_03",depth:3,name:"Blockchain Development"},
+  {id:"S20_03_02",parent:"C20_03",depth:3,name:"Smart Contract Writing (Solidity)"},
+  {id:"S20_03_03",parent:"C20_03",depth:3,name:"Crypto & DeFi Trading"},
+  {id:"S20_03_04",parent:"C20_03",depth:3,name:"NFT & Digital Asset Management"},
+{id:"C20_04",parent:"D20",depth:2,name:"AR, VR &\nGame Development",topics:["Unity and Unreal Engine","3D modelling","VR interaction design","AR SDK development","game mechanics","level design"]},
+  {id:"S20_04_01",parent:"C20_04",depth:3,name:"Virtual Reality (VR) Design"},
+  {id:"S20_04_02",parent:"C20_04",depth:3,name:"Augmented Reality (AR) Apps"},
+  {id:"S20_04_03",parent:"C20_04",depth:3,name:"Game Design & Development"},
+  {id:"S20_04_04",parent:"C20_04",depth:3,name:"3D Modelling & Animation"},
+
+// ────────────────────── D21: Religious, Cultural & Heritage ─────────
+{id:"D21",parent:"ROOT",depth:1,name:"Religious, Cultural\n& Heritage",desc:"Religious services, astrology, heritage conservation and traditional knowledge"},
+{id:"C21_01",parent:"D21",depth:2,name:"Religious\nServices",topics:["religious texts and scripture","ritual procedures","sermon and congregation management","inter-faith understanding","temple and mosque administration","religious education"]},
+  {id:"S21_01_01",parent:"C21_01",depth:3,name:"Hindu Priest & Pandit"},
+  {id:"S21_01_02",parent:"C21_01",depth:3,name:"Islamic Imam & Madrasa Education"},
+  {id:"S21_01_03",parent:"C21_01",depth:3,name:"Christian Ministry & Pastoral Work"},
+  {id:"S21_01_04",parent:"C21_01",depth:3,name:"Temple & Religious Administration"},
+{id:"C21_02",parent:"D21",depth:2,name:"Astrology &\nTraditional Knowledge",topics:["Vedic astrology and horoscope making","planetary positions","numerology systems","palmistry basics","Vastu principles","traditional Ayurvedic Vaidya practice"]},
+  {id:"S21_02_01",parent:"C21_02",depth:3,name:"Vedic Jyotish & Astrology"},
+  {id:"S21_02_02",parent:"C21_02",depth:3,name:"Vastu Shastra Consultant"},
+  {id:"S21_02_03",parent:"C21_02",depth:3,name:"Numerology & Tarot Reading"},
+  {id:"S21_02_04",parent:"C21_02",depth:3,name:"Traditional Ayurvedic Practitioner (Vaidya)"},
+{id:"C21_03",parent:"D21",depth:2,name:"Heritage &\nCultural Conservation",topics:["archaeological methods","museum documentation","conservation materials","oral history recording","intangible cultural heritage","archival science"]},
+  {id:"S21_03_01",parent:"C21_03",depth:3,name:"Museum Curation & Archiving"},
+  {id:"S21_03_02",parent:"C21_03",depth:3,name:"Archaeological Survey & Excavation"},
+  {id:"S21_03_03",parent:"C21_03",depth:3,name:"Heritage Building Conservation"},
+  {id:"S21_03_04",parent:"C21_03",depth:3,name:"Oral History & Folklore Documentation"},
+
+// ────────────────────── D22: Animal Care & Veterinary ──────────────
+{id:"D22",parent:"ROOT",depth:1,name:"Animal Care\n& Veterinary",desc:"Veterinary practice, pet industry, wildlife and forest conservation"},
+{id:"C22_01",parent:"D22",depth:2,name:"Veterinary\nPractice",topics:["animal anatomy and physiology","disease diagnosis","surgical basics","vaccination protocols","animal nutrition","large and small animal medicine"]},
+  {id:"S22_01_01",parent:"C22_01",depth:3,name:"Veterinary Doctor (BVSc)"},
+  {id:"S22_01_02",parent:"C22_01",depth:3,name:"Veterinary Nurse & Technician"},
+  {id:"S22_01_03",parent:"C22_01",depth:3,name:"Animal Lab Technician"},
+  {id:"S22_01_04",parent:"C22_01",depth:3,name:"Large Animal Field Vet"},
+{id:"C22_02",parent:"D22",depth:2,name:"Pet Industry\n& Care",topics:["pet grooming techniques","animal behaviour and training","pet nutrition","pet store operations","animal psychology","photography for pets"]},
+  {id:"S22_02_01",parent:"C22_02",depth:3,name:"Pet Grooming & Styling"},
+  {id:"S22_02_02",parent:"C22_02",depth:3,name:"Dog & Animal Training"},
+  {id:"S22_02_03",parent:"C22_02",depth:3,name:"Pet Store Management"},
+  {id:"S22_02_04",parent:"C22_02",depth:3,name:"Pet Photography & Blogging"},
+{id:"C22_03",parent:"D22",depth:2,name:"Wildlife &\nForest Services",topics:["wildlife biology","forest laws and regulations","species identification","conservation field techniques","zoo management","marine wildlife"]},
+  {id:"S22_03_01",parent:"C22_03",depth:3,name:"Wildlife Biologist & Researcher"},
+  {id:"S22_03_02",parent:"C22_03",depth:3,name:"Forest Ranger & Conservation Officer"},
+  {id:"S22_03_03",parent:"C22_03",depth:3,name:"Zoo Management & Keeper"},
+  {id:"S22_03_04",parent:"C22_03",depth:3,name:"Marine Wildlife Conservation"},
+
+// ────────────────────── D23: Event & Entertainment Business ─────────
+{id:"D23",parent:"ROOT",depth:1,name:"Event & Entertainment\nBusiness",desc:"Event planning, technical production and talent and artist management"},
+{id:"C23_01",parent:"D23",depth:2,name:"Event & Wedding\nPlanning",topics:["client brief and budgeting","vendor management","venue selection","timeline and logistics","stage and decor design","crisis management on event day"]},
+  {id:"S23_01_01",parent:"C23_01",depth:3,name:"Wedding Planning & Coordination"},
+  {id:"S23_01_02",parent:"C23_01",depth:3,name:"Corporate Event Management"},
+  {id:"S23_01_03",parent:"C23_01",depth:3,name:"Social & Birthday Events"},
+  {id:"S23_01_04",parent:"C23_01",depth:3,name:"Stage & Venue Decoration"},
+{id:"C23_02",parent:"D23",depth:2,name:"Technical\nProduction",topics:["live sound mixing","PA system setup","stage lighting design","DJ equipment and mixing","live streaming setup","broadcast production"]},
+  {id:"S23_02_01",parent:"C23_02",depth:3,name:"Live Sound Engineering"},
+  {id:"S23_02_02",parent:"C23_02",depth:3,name:"Stage Lighting Design & Operation"},
+  {id:"S23_02_03",parent:"C23_02",depth:3,name:"DJ & Electronic Music Production"},
+  {id:"S23_02_04",parent:"C23_02",depth:3,name:"Live Streaming & Broadcast Tech"},
+{id:"C23_03",parent:"D23",depth:2,name:"Talent & Artist\nManagement",topics:["artist contract negotiation","brand deals and sponsorship","social media growth strategy","tour and booking management","press and publicity","music label operations"]},
+  {id:"S23_03_01",parent:"C23_03",depth:3,name:"Artist & Talent Management"},
+  {id:"S23_03_02",parent:"C23_03",depth:3,name:"Entertainment PR & Publicity"},
+  {id:"S23_03_03",parent:"C23_03",depth:3,name:"Music Label & Distribution"},
+  {id:"S23_03_04",parent:"C23_03",depth:3,name:"Sports & Celebrity Brand Management"},
+
+// ────────────────────── D24: Telecom, Energy & Infrastructure ───────
+{id:"D24",parent:"ROOT",depth:1,name:"Telecom, Energy\n& Infrastructure",desc:"Telecommunications, renewable energy, mining and water infrastructure"},
+{id:"C24_01",parent:"D24",depth:2,name:"Telecommunications",topics:["telecom tower installation","optical fibre splicing","network equipment operation","broadband and 5G technology","DTH and cable setup","TRAI regulations"]},
+  {id:"S24_01_01",parent:"C24_01",depth:3,name:"Telecom Tower Technician"},
+  {id:"S24_01_02",parent:"C24_01",depth:3,name:"Optical Fibre Cable Installation"},
+  {id:"S24_01_03",parent:"C24_01",depth:3,name:"Telecom Network Engineer"},
+  {id:"S24_01_04",parent:"C24_01",depth:3,name:"Broadband & DTH Setup"},
+{id:"C24_02",parent:"D24",depth:2,name:"Renewable &\nClean Energy",topics:["wind energy systems","biogas plant design","energy audit methodology","hydropower basics","energy storage","green certifications"]},
+  {id:"S24_02_01",parent:"C24_02",depth:3,name:"Wind Energy Technician"},
+  {id:"S24_02_02",parent:"C24_02",depth:3,name:"Biogas Plant Operator"},
+  {id:"S24_02_03",parent:"C24_02",depth:3,name:"Energy Auditor & Consultant"},
+  {id:"S24_02_04",parent:"C24_02",depth:3,name:"Hydropower & Small Dam Operations"},
+{id:"C24_03",parent:"D24",depth:2,name:"Mining,\nOil & Geology",topics:["geological survey methods","mining safety regulations","drilling operations","ore beneficiation","gemstone identification","environmental mining compliance"]},
+  {id:"S24_03_01",parent:"C24_03",depth:3,name:"Geological Survey & Mapping"},
+  {id:"S24_03_02",parent:"C24_03",depth:3,name:"Mining Engineering & Operations"},
+  {id:"S24_03_03",parent:"C24_03",depth:3,name:"Oil & Gas Drilling Technician"},
+  {id:"S24_03_04",parent:"C24_03",depth:3,name:"Gemstone Mining & Processing"},
+{id:"C24_04",parent:"D24",depth:2,name:"Water, Sanitation\n& Environment",topics:["water treatment processes","sewage and waste management","environmental impact assessment","WASH program delivery","pollution control","sustainable infrastructure"]},
+  {id:"S24_04_01",parent:"C24_04",depth:3,name:"Water Treatment Plant Operator"},
+  {id:"S24_04_02",parent:"C24_04",depth:3,name:"Sanitation & Waste Management"},
+  {id:"S24_04_03",parent:"C24_04",depth:3,name:"Environmental Impact Assessment"},
+  {id:"S24_04_04",parent:"C24_04",depth:3,name:"WASH Program Field Worker"},
+];
+
+// ═══════════════════════════════════════════════════════════════════
+// BUILD HIERARCHY
+// ═══════════════════════════════════════════════════════════════════
+function buildTree(){
+  const root={id:"ROOT",name:"TAARA\nSkill Map",depth:0,desc:"24 Career Domains · 89 Skill Clusters · 330+ Career Paths",children:[]};
+  const map={ROOT:root};
+  DATA.forEach(n=>{map[n.id]={...n,children:n.depth<3?[]:undefined};});
+  DATA.forEach(n=>{const par=map[n.parent];if(par){if(!par.children)par.children=[];par.children.push(map[n.id]);}});
+  return root;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════════════════════════
+const domains=DATA.filter(n=>n.depth===1).length;
+const clusters=DATA.filter(n=>n.depth===2).length;
+const skills=DATA.filter(n=>n.depth===3).length;
+document.getElementById("stat-line").textContent=
+  `${domains} Career Domains · ${clusters} Skill Clusters · ${skills} Specific Career Paths`;
+
+// ═══════════════════════════════════════════════════════════════════
+// D3 RADIAL TREE LAYOUT
+// ═══════════════════════════════════════════════════════════════════
+const W=window.innerWidth, H=window.innerHeight;
+const maxR=Math.min(W,H)*0.455;
+
+const svg=d3.select("#graph").attr("viewBox",`0 0 ${W} ${H}`);
+const g=svg.append("g");
+
+const zm=d3.zoom().scaleExtent([0.06,6]).on("zoom",e=>g.attr("transform",e.transform));
+svg.call(zm);
+svg.call(zm.transform,d3.zoomIdentity.translate(W/2,H/2));
+
+const root=d3.hierarchy(buildTree());
+const treeLayout=d3.tree()
+  .size([2*Math.PI,maxR])
+  .separation((a,b)=>(a.parent===b.parent?1:2.2)/Math.max(1,a.depth));
+treeLayout(root);
+
+function rx(d){return d.y*Math.cos(d.x-Math.PI/2);}
+function ry(d){return d.y*Math.sin(d.x-Math.PI/2);}
+const rl=d3.linkRadial().angle(d=>d.x).radius(d=>d.y);
+
+// ── LINKS ──────────────────────────────────────────────────────────
+const linkData=root.links();
+const LC=["rgba(255,255,255,0.38)","rgba(255,255,255,0.16)","rgba(255,255,255,0.07)"];
+const LW=[2,1.2,0.45];
+const linkSel=g.append("g").selectAll("path").data(linkData).join("path")
+  .attr("class","tree-link")
+  .attr("d",d=>rl(d))
+  .style("stroke",d=>LC[d.target.depth-1]||"rgba(255,255,255,0.05)")
+  .style("stroke-width",d=>LW[d.target.depth-1]||0.4);
+
+// ── NODES ──────────────────────────────────────────────────────────
+const allNd=root.descendants();
+const RC={0:42,1:19,2:10,3:3.5};
+const FC={0:"#ffffff",1:"#c8c8c8",2:"#484848",3:"#1c1c1c"};
+const SK={0:"#777",1:"#888",2:"#666",3:"#444"};
+const LV=["ROOT","DOMAIN","CLUSTER","SKILL"];
+
+const ndSel=g.append("g").selectAll("g").data(allNd).join("g")
+  .attr("transform",d=>`translate(${rx(d)},${ry(d)})`);
+
+ndSel.append("circle")
+  .attr("r",d=>RC[d.depth])
+  .style("fill",d=>FC[d.depth])
+  .style("stroke",d=>SK[d.depth])
+  .style("stroke-width","1px")
+  .style("cursor","pointer")
+  .on("mouseover",showTip)
+  .on("mousemove",moveTip)
+  .on("mouseout",hideTip)
+  .on("click",clickNode);
+
+// ── LABELS ─────────────────────────────────────────────────────────
+const FS={0:"11px",1:"8.5px",2:"7.5px",3:"7px"};
+const FW={0:"bold",1:"bold",2:"normal",3:"normal"};
+const FC2={0:"#111",1:"#ccc",2:"#999",3:"#666"};
+
+ndSel.each(function(d){
+  const el=d3.select(this);
+  const nm=d.data.name||"";
+  const lines=nm.split("\n");
+  const r=RC[d.depth];
+  const isSkill=d.depth===3;
+
+  // Outward direction from centre to node → use for label offset
+  const mag=d.y||1;
+  const ux=d.y>0?rx(d)/mag:0;
+  const uy=d.y>0?ry(d)/mag:-1;
+  const off=r+9;
+
+  if(d.depth===0){
+    // Root: two lines centred inside circle
+    el.append("text")
+      .attr("text-anchor","middle")
+      .attr("font-size","9.5px").attr("font-weight","bold").attr("fill","#111")
+      .attr("dy",lines.length>1?"-0.2em":"0.35em")
+      .text("TAARA");
+    if(lines.length>1)
+      el.append("text")
+        .attr("text-anchor","middle")
+        .attr("font-size","7px").attr("font-weight","normal").attr("fill","#333")
+        .attr("dy","0.9em").text("Skill Map");
+    return;
   }
-});
 
-document.querySelectorAll('.urgency-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.urgency-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    playerData.urgency = btn.dataset.level;
+  const txt=el.append("text")
+    .attr("class","nd-label"+(isSkill?" sk-lbl":""))
+    .attr("transform",`translate(${(off*ux).toFixed(1)},${(off*uy).toFixed(1)})`)
+    .attr("text-anchor","middle")
+    .attr("font-size",FS[d.depth])
+    .attr("font-weight",FW[d.depth])
+    .attr("fill",FC2[d.depth]);
+
+  lines.forEach((ln,i)=>{
+    txt.append("tspan").attr("x",0).attr("dy",i===0?"0":"1.15em").text(ln);
   });
 });
 
-document.getElementById('submitBtn').addEventListener('click', () => {
-  const name = document.getElementById('studentName').value.trim();
-  const reason = reasonInput.value.trim();
-  const errEl = document.getElementById('formError');
-  
-  if (!name) { errEl.textContent = '⚠ ENTER YOUR NAME, CADET'; return; }
-  if (!reason) { errEl.textContent = '⚠ REASON FIELD REQUIRED'; return; }
-  if (!playerData.urgency) { errEl.textContent = '⚠ SELECT URGENCY LEVEL'; return; }
-  
-  playerData.name = name;
-  playerData.reason = reason;
-  errEl.textContent = '';
-  
-  // Show AI review loading
-  document.getElementById('formScreen').style.display = 'none';
-  document.getElementById('reviewScreen').style.display = 'flex';
-  
-  const statusMessages = [
-    'Initializing neural net...',
-    'Scanning student records...',
-    'Analyzing reason validity...',
-    'Cross-checking attendance...',
-    'Verifying urgency claim...',
-    'Approval granted ✓ Run authorized!'
-  ];
-  
-  const fill = document.getElementById('loadingBarFill');
-  const status = document.getElementById('reviewStatus');
-  let step = 0;
-  
-  const interval = setInterval(() => {
-    step++;
-    const pct = (step / statusMessages.length) * 100;
-    fill.style.width = pct + '%';
-    status.textContent = statusMessages[step - 1];
-    
-    if (step === statusMessages.length) {
-      clearInterval(interval);
-      status.style.color = '#00ff88';
-      status.style.textShadow = '0 0 15px #00ff88';
-      
-      setTimeout(() => {
-        document.getElementById('reviewScreen').style.display = 'none';
-        document.getElementById('title').style.display = 'flex';
-        
-        // Display player info on title screen
-        const urgencyColors = {
-          casual: '#00ff88',
-          urgent: '#ffff00',
-          life: '#ff0066'
-        };
-        document.getElementById('playerInfoDisplay').innerHTML = `
-          CADET: <span>${playerData.name.toUpperCase()}</span> &nbsp;|&nbsp; 
-          STATUS: <span style="color:${urgencyColors[playerData.urgency]}">${playerData.urgency.toUpperCase()}</span>
-        `;
-      }, 800);
-    }
-  }, 600);
+// ── TOOLTIP ────────────────────────────────────────────────────────
+function showTip(e,d){
+  const tip=document.getElementById("tip");
+  document.getElementById("tLv").textContent=LV[d.depth];
+  document.getElementById("tNm").textContent=d.data.name.replace(/\n/g," ");
+  const info=d.data.topics?("Topics: "+d.data.topics.join(" · ")):
+    (d.data.desc||"");
+  document.getElementById("tTp").textContent=info;
+  tip.style.display="block";
+}
+function moveTip(e){
+  const tip=document.getElementById("tip");
+  tip.style.left=(e.clientX+14)+"px";
+  tip.style.top=(e.clientY-10)+"px";
+  const r=tip.getBoundingClientRect();
+  if(r.right>window.innerWidth-8)tip.style.left=(e.clientX-r.width-14)+"px";
+  if(r.bottom>window.innerHeight-8)tip.style.top=(e.clientY-r.height-10)+"px";
+}
+function hideTip(){document.getElementById("tip").style.display="none";}
+
+// ── CLICK → ZOOM TO SUBTREE ─────────────────────────────────────────
+function clickNode(e,d){
+  if(d.depth===0){resetView();return;}
+  e.stopPropagation();
+  const sc=d.depth===1?2.8:d.depth===2?4:5;
+  const tx=W/2-rx(d)*sc, ty=H/2-ry(d)*sc;
+  svg.transition().duration(650).call(zm.transform,d3.zoomIdentity.translate(tx,ty).scale(sc));
+  // Dim non-subtree nodes
+  const ancs=new Set(d.descendants().map(n=>n.data.id));
+  ndSel.style("opacity",n=>n.depth===0||ancs.has(n.data.id)?1:0.08);
+  linkSel.style("opacity",l=>ancs.has(l.target.data.id)?1:0.04);
+}
+svg.on("click",resetView);
+function resetView(){
+  svg.transition().duration(550).call(zm.transform,d3.zoomIdentity.translate(W/2,H/2));
+  ndSel.style("opacity",null);
+  linkSel.style("opacity",null);
+}
+
+// ── CONTROLS ────────────────────────────────────────────────────────
+let showSkills=false;
+document.getElementById("btnLbl").addEventListener("click",function(){
+  showSkills=!showSkills;
+  d3.selectAll(".sk-lbl").classed("show",showSkills);
+  this.textContent=showSkills?"HIDE SKILL LABELS":"SHOW SKILL LABELS";
+  this.classList.toggle("on",showSkills);
+});
+document.getElementById("btnRst").addEventListener("click",resetView);
+
+// ── SEARCH ─────────────────────────────────────────────────────────
+document.getElementById("search").addEventListener("input",function(){
+  const q=this.value.toLowerCase().trim();
+  if(!q){ndSel.style("opacity",null);linkSel.style("opacity",null);return;}
+  ndSel.style("opacity",function(d){
+    const nm=(d.data.name||"").toLowerCase().replace(/\n/g," ");
+    return nm.includes(q)?1:0.06;
+  });
+  linkSel.style("opacity",0.03);
+});
+document.getElementById("search").addEventListener("keydown",e=>{
+  if(e.key==="Escape"){e.target.value="";ndSel.style("opacity",null);linkSel.style("opacity",null);}
 });
 
-// ============ GAME ============
-let scene, camera, renderer, player, guzar;
-let obstacles = [], cards = [], buildings = [];
-let gameSpeed = 0.4;
-let score = 0;
-let gameRunning = false;
-let playerLane = 0;
-const lanePositions = [-2.5, 0, 2.5];
-let playerY = 0, playerVY = 0, isJumping = false;
-let mainGate = null;
-let gateSpawned = false;
-let gameEnded = false;
-let clock = new THREE.Clock();
-let groundSegments = [];
-let guzarDistance = 8;
-let guzarLane = 0;
-let guzarLaneTimer = 0;
+function zIn(){svg.transition().duration(220).call(zm.scaleBy,1.45);}
+function zOut(){svg.transition().duration(220).call(zm.scaleBy,0.68);}
 
-const TARGET_SCORE = 375;
-
-function init() {
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0a0520);
-  scene.fog = new THREE.Fog(0x1a0a40, 25, 90);
-  
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 4, 8);
-  camera.lookAt(0, 1, 0);
-  
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = true;
-  document.body.appendChild(renderer.domElement);
-  
-  const ambient = new THREE.AmbientLight(0x4040aa, 0.5);
-  scene.add(ambient);
-  const sun = new THREE.DirectionalLight(0xff66ff, 0.6);
-  sun.position.set(10, 20, 5);
-  scene.add(sun);
-  const cyan = new THREE.DirectionalLight(0x00f0ff, 0.5);
-  cyan.position.set(-10, 15, -5);
-  scene.add(cyan);
-  
-  for (let i = 0; i < 6; i++) {
-    createGroundSegment(-i * 20);
-  }
-  
-  createPlayer();
-  createGuzar();
-  
-  for (let i = 0; i < 20; i++) {
-    spawnBuilding(-i * 8);
-  }
-  
-  window.addEventListener('keydown', onKey);
-  window.addEventListener('resize', onResize);
-}
-
-function createGroundSegment(z) {
-  const group = new THREE.Group();
-  
-  const pathGeo = new THREE.PlaneGeometry(10, 20);
-  const pathMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e });
-  const path = new THREE.Mesh(pathGeo, pathMat);
-  path.rotation.x = -Math.PI / 2;
-  group.add(path);
-  
-  for (let i = 0; i < 5; i++) {
-    const lineGeo = new THREE.PlaneGeometry(0.15, 2);
-    const lineMat1 = new THREE.MeshBasicMaterial({ color: 0xff00ff });
-    const line1 = new THREE.Mesh(lineGeo, lineMat1);
-    line1.rotation.x = -Math.PI / 2;
-    line1.position.set(-1.25, 0.01, -8 + i * 4);
-    group.add(line1);
-    
-    const lineMat2 = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
-    const line2 = new THREE.Mesh(lineGeo, lineMat2);
-    line2.rotation.x = -Math.PI / 2;
-    line2.position.set(1.25, 0.01, -8 + i * 4);
-    group.add(line2);
-  }
-  
-  const edgeGeo = new THREE.PlaneGeometry(0.3, 20);
-  const edgeMatL = new THREE.MeshBasicMaterial({ color: 0xff00ff });
-  const edgeL = new THREE.Mesh(edgeGeo, edgeMatL);
-  edgeL.rotation.x = -Math.PI / 2;
-  edgeL.position.set(-5, 0.02, 0);
-  group.add(edgeL);
-  const edgeMatR = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
-  const edgeR = new THREE.Mesh(edgeGeo, edgeMatR);
-  edgeR.rotation.x = -Math.PI / 2;
-  edgeR.position.set(5, 0.02, 0);
-  group.add(edgeR);
-  
-  const grassGeo = new THREE.PlaneGeometry(20, 20);
-  const grassMat = new THREE.MeshStandardMaterial({ color: 0x0a0a25 });
-  const grassL = new THREE.Mesh(grassGeo, grassMat);
-  grassL.rotation.x = -Math.PI / 2;
-  grassL.position.set(-15, -0.01, 0);
-  group.add(grassL);
-  const grassR = new THREE.Mesh(grassGeo, grassMat);
-  grassR.rotation.x = -Math.PI / 2;
-  grassR.position.set(15, -0.01, 0);
-  group.add(grassR);
-  
-  for (let i = -2; i <= 2; i++) {
-    const g1 = new THREE.Mesh(
-      new THREE.PlaneGeometry(20, 0.05),
-      new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.4 })
-    );
-    g1.rotation.x = -Math.PI / 2;
-    g1.position.set(-15, 0, i * 4);
-    group.add(g1);
-    const g2 = g1.clone();
-    g2.position.set(15, 0, i * 4);
-    group.add(g2);
-  }
-  
-  group.position.z = z;
-  scene.add(group);
-  groundSegments.push(group);
-}
-
-// Create text label for "GUZAR" tag above the guard
-function createTextSprite(text, color = '#00ff88') {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 80;
-  const ctx = canvas.getContext('2d');
-  
-  // Background
-  ctx.fillStyle = 'rgba(0, 20, 0, 0.85)';
-  ctx.fillRect(0, 0, 256, 80);
-  
-  // Border
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 4;
-  ctx.strokeRect(4, 4, 248, 72);
-  
-  // Glow text
-  ctx.shadowColor = color;
-  ctx.shadowBlur = 15;
-  ctx.fillStyle = color;
-  ctx.font = 'bold 42px monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, 128, 40);
-  
-  const texture = new THREE.CanvasTexture(canvas);
-  const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
-  const sprite = new THREE.Sprite(material);
-  sprite.scale.set(2, 0.625, 1);
-  return sprite;
-}
-
-function createPlayer() {
-  player = new THREE.Group();
-  
-  const bodyGeo = new THREE.BoxGeometry(0.6, 0.7, 0.4);
-  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x00f0ff, emissive: 0x004466, emissiveIntensity: 0.3 });
-  const body = new THREE.Mesh(bodyGeo, bodyMat);
-  body.position.y = 1.0;
-  player.add(body);
-  
-  const headGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
-  const headMat = new THREE.MeshStandardMaterial({ color: 0xffd1a4 });
-  const head = new THREE.Mesh(headGeo, headMat);
-  head.position.y = 1.55;
-  player.add(head);
-  
-  const hairGeo = new THREE.BoxGeometry(0.42, 0.12, 0.42);
-  const hairMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
-  const hair = new THREE.Mesh(hairGeo, hairMat);
-  hair.position.y = 1.78;
-  player.add(hair);
-  
-  // Backpack
-  const bagGeo = new THREE.BoxGeometry(0.55, 0.7, 0.25);
-  const bagMat = new THREE.MeshStandardMaterial({ color: 0xff00ff, emissive: 0x440044, emissiveIntensity: 0.4 });
-  const bag = new THREE.Mesh(bagGeo, bagMat);
-  bag.position.set(0, 1.0, -0.32);
-  player.add(bag);
-  
-  const strapGeo = new THREE.BoxGeometry(0.08, 0.7, 0.05);
-  const strapMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
-  const strapL = new THREE.Mesh(strapGeo, strapMat);
-  strapL.position.set(-0.2, 1.0, -0.18);
-  player.add(strapL);
-  const strapR = new THREE.Mesh(strapGeo, strapMat);
-  strapR.position.set(0.2, 1.0, -0.18);
-  player.add(strapR);
-  
-  const pocketGeo = new THREE.BoxGeometry(0.35, 0.25, 0.06);
-  const pocketMat = new THREE.MeshStandardMaterial({ color: 0xaa00aa });
-  const pocket = new THREE.Mesh(pocketGeo, pocketMat);
-  pocket.position.set(0, 0.85, -0.46);
-  player.add(pocket);
-  
-  // Shorts
-  const shortsGeo = new THREE.BoxGeometry(0.55, 0.3, 0.42);
-  const shortsMat = new THREE.MeshStandardMaterial({ color: 0x222244 });
-  const shorts = new THREE.Mesh(shortsGeo, shortsMat);
-  shorts.position.y = 0.5;
-  player.add(shorts);
-  
-  // Bare legs
-  const legGeo = new THREE.BoxGeometry(0.22, 0.5, 0.22);
-  const legMat = new THREE.MeshStandardMaterial({ color: 0xffd1a4 });
-  const legL = new THREE.Mesh(legGeo, legMat);
-  legL.position.set(-0.15, 0.25, 0);
-  legL.name = 'legL';
-  player.add(legL);
-  const legR = new THREE.Mesh(legGeo, legMat);
-  legR.position.set(0.15, 0.25, 0);
-  legR.name = 'legR';
-  player.add(legR);
-  
-  const shoeGeo = new THREE.BoxGeometry(0.26, 0.12, 0.32);
-  const shoeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x222222 });
-  const shoeL = new THREE.Mesh(shoeGeo, shoeMat);
-  shoeL.position.set(-0.15, 0.06, 0.05);
-  shoeL.name = 'shoeL';
-  player.add(shoeL);
-  const shoeR = new THREE.Mesh(shoeGeo, shoeMat);
-  shoeR.position.set(0.15, 0.06, 0.05);
-  shoeR.name = 'shoeR';
-  player.add(shoeR);
-  
-  const armGeo = new THREE.BoxGeometry(0.18, 0.55, 0.2);
-  const armMat = new THREE.MeshStandardMaterial({ color: 0xffd1a4 });
-  const armL = new THREE.Mesh(armGeo, armMat);
-  armL.position.set(-0.4, 0.95, 0);
-  armL.name = 'armL';
-  player.add(armL);
-  const armR = new THREE.Mesh(armGeo, armMat);
-  armR.position.set(0.4, 0.95, 0);
-  armR.name = 'armR';
-  player.add(armR);
-  
-  player.position.set(0, 0, 2);
-  scene.add(player);
-}
-
-function createGuzar() {
-  guzar = new THREE.Group();
-  
-  // GREEN UNIFORM body
-  const bodyGeo = new THREE.BoxGeometry(0.75, 0.9, 0.5);
-  const bodyMat = new THREE.MeshStandardMaterial({ 
-    color: 0x2d5a2d, 
-    emissive: 0x113311, 
-    emissiveIntensity: 0.3 
+// ═══════════════════════════════════════════════════════════════════
+// AI JSON EXPORT
+// ═══════════════════════════════════════════════════════════════════
+function buildAIJSON(){
+  const domainMap={};
+  DATA.filter(n=>n.depth===1).forEach(d=>{
+    domainMap[d.id]={
+      id:d.id,
+      name:d.name.replace(/\n/g," "),
+      description:d.desc,
+      dropdown_label:d.name.replace(/\n/g," "),
+      clusters:{}
+    };
   });
-  const body = new THREE.Mesh(bodyGeo, bodyMat);
-  body.position.y = 0.95;
-  guzar.add(body);
-  
-  // Uniform belt
-  const beltGeo = new THREE.BoxGeometry(0.78, 0.12, 0.52);
-  const beltMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
-  const belt = new THREE.Mesh(beltGeo, beltMat);
-  belt.position.y = 0.6;
-  guzar.add(belt);
-  
-  // Belt buckle
-  const buckleGeo = new THREE.BoxGeometry(0.15, 0.12, 0.05);
-  const buckleMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0x886600, emissiveIntensity: 0.5 });
-  const buckle = new THREE.Mesh(buckleGeo, buckleMat);
-  buckle.position.set(0, 0.6, 0.27);
-  guzar.add(buckle);
-  
-  // Uniform stripes (epaulettes)
-  const epauletteGeo = new THREE.BoxGeometry(0.2, 0.08, 0.5);
-  const epauletteMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0x665500, emissiveIntensity: 0.3 });
-  const epL = new THREE.Mesh(epauletteGeo, epauletteMat);
-  epL.position.set(-0.28, 1.32, 0);
-  guzar.add(epL);
-  const epR = new THREE.Mesh(epauletteGeo, epauletteMat);
-  epR.position.set(0.28, 1.32, 0);
-  guzar.add(epR);
-  
-  // Badge on chest
-  const badgeGeo = new THREE.BoxGeometry(0.15, 0.15, 0.05);
-  const badgeMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0x886600, emissiveIntensity: 0.6 });
-  const badge = new THREE.Mesh(badgeGeo, badgeMat);
-  badge.position.set(-0.18, 1.1, 0.27);
-  guzar.add(badge);
-  
-  // Head
-  const headGeo = new THREE.BoxGeometry(0.42, 0.42, 0.42);
-  const headMat = new THREE.MeshStandardMaterial({ color: 0xddb088 });
-  const head = new THREE.Mesh(headGeo, headMat);
-  head.position.y = 1.6;
-  guzar.add(head);
-  
-  // Green peaked cap
-  const capGeo = new THREE.BoxGeometry(0.46, 0.18, 0.46);
-  const capMat = new THREE.MeshStandardMaterial({ color: 0x1f4a1f, emissive: 0x0a1a0a });
-  const cap = new THREE.Mesh(capGeo, capMat);
-  cap.position.y = 1.9;
-  guzar.add(cap);
-  
-  // Cap visor
-  const visorGeo = new THREE.BoxGeometry(0.46, 0.05, 0.18);
-  const visorMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
-  const visor = new THREE.Mesh(visorGeo, visorMat);
-  visor.position.set(0, 1.83, 0.3);
-  guzar.add(visor);
-  
-  // Cap badge
-  const capBadgeGeo = new THREE.BoxGeometry(0.12, 0.1, 0.04);
-  const capBadge = new THREE.Mesh(capBadgeGeo, badgeMat);
-  capBadge.position.set(0, 1.92, 0.24);
-  guzar.add(capBadge);
-  
-  // Angry red eyes
-  const eyeGeo = new THREE.BoxGeometry(0.1, 0.08, 0.05);
-  const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-  const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeL.position.set(-0.1, 1.65, 0.22);
-  guzar.add(eyeL);
-  const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeR.position.set(0.1, 1.65, 0.22);
-  guzar.add(eyeR);
-  
-  // Angry mustache
-  const mustGeo = new THREE.BoxGeometry(0.28, 0.06, 0.06);
-  const mustMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
-  const must = new THREE.Mesh(mustGeo, mustMat);
-  must.position.set(0, 1.5, 0.22);
-  guzar.add(must);
-  
-  // Green pants/legs
-  const legGeo = new THREE.BoxGeometry(0.27, 0.65, 0.27);
-  const legMat = new THREE.MeshStandardMaterial({ color: 0x2d5a2d });
-  const legL = new THREE.Mesh(legGeo, legMat);
-  legL.position.set(-0.17, 0.32, 0);
-  legL.name = 'legL';
-  guzar.add(legL);
-  const legR = new THREE.Mesh(legGeo, legMat);
-  legR.position.set(0.17, 0.32, 0);
-  legR.name = 'legR';
-  guzar.add(legR);
-  
-  // Black boots
-  const bootGeo = new THREE.BoxGeometry(0.3, 0.15, 0.35);
-  const bootMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
-  const bootL = new THREE.Mesh(bootGeo, bootMat);
-  bootL.position.set(-0.17, 0.07, 0.04);
-  bootL.name = 'bootL';
-  guzar.add(bootL);
-  const bootR = new THREE.Mesh(bootGeo, bootMat);
-  bootR.position.set(0.17, 0.07, 0.04);
-  bootR.name = 'bootR';
-  guzar.add(bootR);
-  
-  // Arms (green sleeves)
-  const armGeo = new THREE.BoxGeometry(0.22, 0.62, 0.22);
-  const armMat = new THREE.MeshStandardMaterial({ color: 0x2d5a2d });
-  const armL = new THREE.Mesh(armGeo, armMat);
-  armL.position.set(-0.48, 1.0, 0);
-  armL.name = 'armL';
-  guzar.add(armL);
-  const armR = new THREE.Group();
-  armR.name = 'armR';
-  const armRMesh = new THREE.Mesh(armGeo, armMat);
-  armR.add(armRMesh);
-  armR.position.set(0.48, 1.0, 0);
-  guzar.add(armR);
-  
-  // BATON (held in right hand)
-  const batonGroup = new THREE.Group();
-  // Baton handle
-  const handleGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.15, 8);
-  const handleMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
-  const handle = new THREE.Mesh(handleGeo, handleMat);
-  handle.position.y = -0.07;
-  batonGroup.add(handle);
-  
-  // Baton stick (longer black)
-  const stickGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.7, 8);
-  const stickMat = new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0x110000, emissiveIntensity: 0.3 });
-  const stick = new THREE.Mesh(stickGeo, stickMat);
-  stick.position.y = -0.5;
-  batonGroup.add(stick);
-  
-  // Baton tip (yellow warning)
-  const tipGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.08, 8);
-  const tipMat = new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0xaaaa00, emissiveIntensity: 0.6 });
-  const tip = new THREE.Mesh(tipGeo, tipMat);
-  tip.position.y = -0.88;
-  batonGroup.add(tip);
-  
-  batonGroup.position.set(0, -0.3, 0.2);
-  batonGroup.rotation.x = 0.3;
-  batonGroup.name = 'baton';
-  armR.add(batonGroup);
-  
-  // GUZAR NAME TAG sprite
-  const tag = createTextSprite('GUZAR', '#00ff88');
-  tag.position.y = 2.6;
-  guzar.add(tag);
-  
-  // Glowing arrow pointing down to him
-  const arrowGeo = new THREE.ConeGeometry(0.15, 0.3, 4);
-  const arrowMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
-  const arrow = new THREE.Mesh(arrowGeo, arrowMat);
-  arrow.rotation.x = Math.PI;
-  arrow.position.y = 2.25;
-  arrow.name = 'arrow';
-  guzar.add(arrow);
-  
-  guzar.position.set(0, 0, guzarDistance);
-  scene.add(guzar);
+  DATA.filter(n=>n.depth===2).forEach(c=>{
+    const skills=DATA.filter(s=>s.parent===c.id&&s.depth===3).map(s=>({
+      id:s.id,
+      name:s.name.replace(/\n/g," "),
+      question_count:2,
+      question_types:"1 MCQ + 1 practical scenario"
+    }));
+    domainMap[c.parent].clusters[c.id]={
+      id:c.id,
+      name:c.name.replace(/\n/g," "),
+      question_topics:c.topics||[],
+      total_questions:skills.length*2,
+      time_minutes:skills.length*2*2,
+      skills
+    };
+  });
+
+  const out={
+    system:"TAARA Skill Assessment Engine v2.0",
+    total_domains:domains,
+    total_clusters:clusters,
+    total_career_paths:skills,
+    ai_instructions:[
+      "STEP 1 — User selects a Domain from the dropdown (use domain.dropdown_label as option text, domain.id as value).",
+      "STEP 2 — User selects a Cluster within that domain from a second dropdown.",
+      "STEP 3 — Generate questions using cluster.question_topics AND each skill's name as the subject.",
+      "STEP 4 — Mix question types per skill: 1 MCQ (knowledge) + 1 practical scenario question.",
+      "STEP 5 — Total quiz time = cluster.time_minutes (2 minutes per question).",
+      "STEP 6 — Quiz is strictly TIMED. If user does not attempt all questions → set failure:true, block analysis, show 30-min retry timer.",
+      "STEP 7 — Score each skill: > 70% = STRENGTH · 40–70% = AVERAGE · < 40% = WEAKNESS.",
+      "STEP 8 — For each WEAKNESS: provide 2 improvement tips + 1 free course recommendation + 1 daily exercise.",
+      "STEP 9 — Generate final JSON report: { user_id, domain, cluster, strengths:[], averages:[], weaknesses:[], overall_score_percent, recommendations:[], generated_at }",
+      "STEP 10 — Respond in the user's selected language (Hindi, Tamil, Bengali, Punjabi, Bhojpuri, English, etc.).",
+      "STEP 11 — Include vocal exercise analysis if voice recording was submitted: assess confidence, clarity, fluency, multilingual ability."
+    ],
+    dropdown_options:Object.values(domainMap).map(d=>({value:d.id,label:d.dropdown_label})),
+    skill_map:domainMap
+  };
+  return JSON.stringify(out,null,2);
 }
 
-function spawnBuilding(z) {
-  [-1, 1].forEach(s => {
-    const h = 5 + Math.random() * 12;
-    const w = 2.5 + Math.random() * 2.5;
-    const d = 3 + Math.random() * 2;
-    const geo = new THREE.BoxGeometry(w, h, d);
-    
-    const baseColors = [0x1a1030, 0x150525, 0x201040, 0x100525, 0x251535];
-    const mat = new THREE.MeshStandardMaterial({ 
-      color: baseColors[Math.floor(Math.random()*baseColors.length)]
-    });
-    const b = new THREE.Mesh(geo, mat);
-    const xPos = s * (7 + Math.random() * 4);
-    b.position.set(xPos, h/2, z);
-    scene.add(b);
-    buildings.push(b);
-    
-    const windowColors = [0xff00ff, 0x00f0ff, 0xffff00, 0xff0066, 0x00ff88];
-    const numFloors = Math.floor(h / 1.2);
-    
-    for (let row = 0; row < numFloors; row++) {
-      for (let col = 0; col < 3; col++) {
-        if (Math.random() < 0.6) {
-          const winGeo = new THREE.PlaneGeometry(0.4, 0.6);
-          const winColor = windowColors[Math.floor(Math.random() * windowColors.length)];
-          const winMat = new THREE.MeshBasicMaterial({ color: winColor });
-          const win = new THREE.Mesh(winGeo, winMat);
-          
-          const sideOffset = s > 0 ? -w/2 - 0.01 : w/2 + 0.01;
-          win.position.set(xPos + sideOffset, 0.8 + row * 1.2, z - d/2 + 0.5 + col * (d/3));
-          win.rotation.y = s > 0 ? -Math.PI/2 : Math.PI/2;
-          scene.add(win);
-          buildings.push(win);
-        }
-      }
-    }
-    
-    if (Math.random() < 0.4) {
-      const signGeo = new THREE.BoxGeometry(w * 0.7, 0.3, 0.1);
-      const signColor = windowColors[Math.floor(Math.random() * windowColors.length)];
-      const signMat = new THREE.MeshBasicMaterial({ color: signColor });
-      const sign = new THREE.Mesh(signGeo, signMat);
-      sign.position.set(xPos, h + 0.3, z);
-      scene.add(sign);
-      buildings.push(sign);
-    }
-    
-    if (Math.random() < 0.3) {
-      const antGeo = new THREE.BoxGeometry(0.1, 1.5, 0.1);
-      const antMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
-      const ant = new THREE.Mesh(antGeo, antMat);
-      ant.position.set(xPos, h + 0.75, z);
-      scene.add(ant);
-      buildings.push(ant);
-      
-      const blinkGeo = new THREE.SphereGeometry(0.1, 6, 6);
-      const blinkMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-      const blink = new THREE.Mesh(blinkGeo, blinkMat);
-      blink.position.set(xPos, h + 1.55, z);
-      scene.add(blink);
-      buildings.push(blink);
-    }
+document.getElementById("btnJson").addEventListener("click",()=>{
+  document.getElementById("jbody").textContent=buildAIJSON();
+  document.getElementById("jmodal").classList.add("open");
+});
+document.getElementById("btnClose").addEventListener("click",()=>{
+  document.getElementById("jmodal").classList.remove("open");
+});
+document.getElementById("btnCopy").addEventListener("click",function(){
+  navigator.clipboard.writeText(document.getElementById("jbody").textContent).then(()=>{
+    this.textContent="✓ COPIED!";
+    setTimeout(()=>{this.textContent="COPY ALL";},2500);
   });
-}
-
-function spawnObstacle(z) {
-  const lane = Math.floor(Math.random() * 3) - 1;
-  const type = Math.random();
-  
-  let obs;
-  if (type < 0.4) {
-    obs = new THREE.Group();
-    const body = new THREE.Mesh(
-      new THREE.BoxGeometry(0.7, 1, 0.5),
-      new THREE.MeshStandardMaterial({ color: 0x224422, emissive: 0x002200, emissiveIntensity: 0.2 })
-    );
-    body.position.y = 1;
-    obs.add(body);
-    
-    const head = new THREE.Mesh(
-      new THREE.BoxGeometry(0.45, 0.45, 0.45),
-      new THREE.MeshStandardMaterial({ color: 0xffd1a4 })
-    );
-    head.position.y = 1.75;
-    obs.add(head);
-    
-    const cap = new THREE.Mesh(
-      new THREE.BoxGeometry(0.5, 0.15, 0.5),
-      new THREE.MeshStandardMaterial({ color: 0x111111 })
-    );
-    cap.position.y = 2.05;
-    obs.add(cap);
-    
-    const baton = new THREE.Mesh(
-      new THREE.BoxGeometry(0.08, 0.5, 0.08),
-      new THREE.MeshStandardMaterial({ color: 0x222222 })
-    );
-    baton.position.set(0.4, 1.0, 0.3);
-    obs.add(baton);
-    
-    const eyeGeo = new THREE.BoxGeometry(0.08, 0.06, 0.04);
-    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
-    const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-    eyeL.position.set(-0.1, 1.78, 0.23);
-    obs.add(eyeL);
-    const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-    eyeR.position.set(0.1, 1.78, 0.23);
-    obs.add(eyeR);
-    
-    obs.userData.type = 'guard';
-    obs.userData.height = 2.2;
-  } else if (type < 0.75) {
-    obs = new THREE.Group();
-    
-    const barGeo = new THREE.BoxGeometry(2, 0.25, 0.15);
-    const barMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0x440000, emissiveIntensity: 0.4 });
-    const bar1 = new THREE.Mesh(barGeo, barMat);
-    bar1.position.y = 0.9;
-    obs.add(bar1);
-    
-    const bar2 = new THREE.Mesh(barGeo, new THREE.MeshStandardMaterial({ color: 0xffffff }));
-    bar2.position.y = 0.6;
-    obs.add(bar2);
-    
-    const bar3 = new THREE.Mesh(barGeo, barMat);
-    bar3.position.y = 0.3;
-    obs.add(bar3);
-    
-    const legGeo = new THREE.BoxGeometry(0.15, 1.0, 0.15);
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
-    const legL = new THREE.Mesh(legGeo, legMat);
-    legL.position.set(-0.9, 0.5, 0);
-    legL.rotation.z = 0.2;
-    obs.add(legL);
-    const legR = new THREE.Mesh(legGeo, legMat);
-    legR.position.set(0.9, 0.5, 0);
-    legR.rotation.z = -0.2;
-    obs.add(legR);
-    
-    const warnGeo = new THREE.SphereGeometry(0.1, 8, 8);
-    const warnMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-    const warn = new THREE.Mesh(warnGeo, warnMat);
-    warn.position.y = 1.1;
-    obs.add(warn);
-    
-    obs.userData.type = 'barricade';
-    obs.userData.height = 1.1;
-  } else {
-    obs = new THREE.Group();
-    
-    const boxGeo = new THREE.BoxGeometry(1.4, 0.5, 0.7);
-    const boxMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
-    const box = new THREE.Mesh(boxGeo, boxMat);
-    box.position.y = 0.25;
-    obs.add(box);
-    
-    for (let i = 0; i < 5; i++) {
-      const paperGeo = new THREE.BoxGeometry(0.5 + Math.random() * 0.3, 0.05, 0.4);
-      const paperColors = [0xffffff, 0xffffaa, 0xfff0e0, 0xffeedd];
-      const paperMat = new THREE.MeshStandardMaterial({ 
-        color: paperColors[Math.floor(Math.random() * paperColors.length)] 
-      });
-      const paper = new THREE.Mesh(paperGeo, paperMat);
-      paper.position.set(
-        (Math.random() - 0.5) * 0.4,
-        0.55 + i * 0.06,
-        (Math.random() - 0.5) * 0.2
-      );
-      paper.rotation.y = (Math.random() - 0.5) * 0.4;
-      obs.add(paper);
-    }
-    
-    for (let i = 0; i < 3; i++) {
-      const lpGeo = new THREE.BoxGeometry(0.4, 0.02, 0.3);
-      const lp = new THREE.Mesh(lpGeo, new THREE.MeshStandardMaterial({ color: 0xffffff }));
-      lp.position.set(
-        (Math.random() - 0.5) * 0.6,
-        0.9 + i * 0.03,
-        (Math.random() - 0.5) * 0.3
-      );
-      lp.rotation.z = (Math.random() - 0.5) * 0.5;
-      lp.rotation.y = Math.random() * Math.PI;
-      obs.add(lp);
-    }
-    
-    obs.userData.type = 'papers';
-    obs.userData.height = 1.0;
-  }
-  
-  obs.position.x = lanePositions[lane + 1];
-  obs.position.z = z;
-  scene.add(obs);
-  obstacles.push(obs);
-}
-
-function spawnCard(z) {
-  const lane = Math.floor(Math.random() * 3) - 1;
-  const card = new THREE.Group();
-  
-  const cardGeo = new THREE.BoxGeometry(0.5, 0.7, 0.05);
-  const cardMat = new THREE.MeshStandardMaterial({ 
-    color: 0xffff00, emissive: 0xffaa00, emissiveIntensity: 0.8
-  });
-  const c = new THREE.Mesh(cardGeo, cardMat);
-  card.add(c);
-  
-  const photoGeo = new THREE.BoxGeometry(0.25, 0.25, 0.06);
-  const photoMat = new THREE.MeshStandardMaterial({ color: 0x00f0ff });
-  const photo = new THREE.Mesh(photoGeo, photoMat);
-  photo.position.y = 0.1;
-  card.add(photo);
-  
-  const stripGeo = new THREE.BoxGeometry(0.4, 0.1, 0.06);
-  const stripMat = new THREE.MeshStandardMaterial({ color: 0xff00ff, emissive: 0x880088 });
-  const strip = new THREE.Mesh(stripGeo, stripMat);
-  strip.position.y = -0.22;
-  card.add(strip);
-  
-  card.position.set(lanePositions[lane + 1], 1.2, z);
-  scene.add(card);
-  cards.push(card);
-}
-
-function spawnMainGate(z) {
-  const gate = new THREE.Group();
-  
-  const barGeo = new THREE.BoxGeometry(10, 1.5, 0.3);
-  const barMat = new THREE.MeshStandardMaterial({ 
-    color: 0x444466, metalness: 0.8, roughness: 0.3,
-    emissive: 0xff00ff, emissiveIntensity: 0.3
-  });
-  const bar = new THREE.Mesh(barGeo, barMat);
-  bar.position.y = 1.5;
-  gate.add(bar);
-  
-  for (let i = -4; i <= 4; i += 1) {
-    const vGeo = new THREE.BoxGeometry(0.15, 1.5, 0.3);
-    const v = new THREE.Mesh(vGeo, barMat);
-    v.position.set(i, 1.5, 0);
-    gate.add(v);
-  }
-  
-  const pillarGeo = new THREE.BoxGeometry(0.8, 4, 0.8);
-  const pillarMat = new THREE.MeshStandardMaterial({ 
-    color: 0x222244, emissive: 0x00f0ff, emissiveIntensity: 0.2
-  });
-  const pL = new THREE.Mesh(pillarGeo, pillarMat);
-  pL.position.set(-5, 2, 0);
-  gate.add(pL);
-  const pR = new THREE.Mesh(pillarGeo, pillarMat);
-  pR.position.set(5, 2, 0);
-  gate.add(pR);
-  
-  const signGeo = new THREE.BoxGeometry(8, 0.8, 0.2);
-  const signMat = new THREE.MeshStandardMaterial({ 
-    color: 0xff00ff, emissive: 0xff00ff, emissiveIntensity: 0.8
-  });
-  const sign = new THREE.Mesh(signGeo, signMat);
-  sign.position.y = 4.4;
-  gate.add(sign);
-  
-  const accentGeo = new THREE.BoxGeometry(8, 0.15, 0.22);
-  const accentMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
-  const accent = new THREE.Mesh(accentGeo, accentMat);
-  accent.position.y = 4.0;
-  gate.add(accent);
-  
-  const lightGeo = new THREE.SphereGeometry(0.2, 8, 8);
-  const lightMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-  const l1 = new THREE.Mesh(lightGeo, lightMat);
-  l1.position.set(-3, 4.4, 0.2);
-  gate.add(l1);
-  const l2 = new THREE.Mesh(lightGeo, lightMat);
-  l2.position.set(3, 4.4, 0.2);
-  gate.add(l2);
-  gate.userData.lights = [l1, l2];
-  
-  gate.position.z = z;
-  gate.userData.passed = false;
-  scene.add(gate);
-  mainGate = gate;
-  
-  document.getElementById('gateAlert').style.display = 'block';
-}
-
-function createConfetti() {
-  const canvas = document.getElementById('confetti');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  const ctx = canvas.getContext('2d');
-  
-  const confettiPieces = [];
-  const colors = ['#ff00ff', '#00f0ff', '#ffff00', '#ff0066', '#00ff88'];
-  
-  for (let i = 0; i < 120; i++) {
-    confettiPieces.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height - canvas.height,
-      vx: (Math.random() - 0.5) * 8,
-      vy: Math.random() * 5 + 5,
-      rotation: Math.random() * Math.PI * 2,
-      vr: (Math.random() - 0.5) * 0.2,
-      size: Math.random() * 5 + 4,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      life: 1
-    });
-  }
-  
-  function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    for (let piece of confettiPieces) {
-      piece.y += piece.vy;
-      piece.x += piece.vx;
-      piece.rotation += piece.vr;
-      piece.vy += 0.1;
-      piece.life -= 0.008;
-      
-      ctx.save();
-      ctx.globalAlpha = piece.life;
-      ctx.translate(piece.x, piece.y);
-      ctx.rotate(piece.rotation);
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = piece.color;
-      ctx.fillStyle = piece.color;
-      ctx.fillRect(-piece.size/2, -piece.size/2, piece.size, piece.size);
-      ctx.restore();
-    }
-    
-    if (confettiPieces.some(p => p.life > 0)) {
-      requestAnimationFrame(animate);
-    }
-  }
-  animate();
-}
-
-function onKey(e) {
-  if (!gameRunning) return;
-  if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
-    if (playerLane > -1) playerLane--;
-  }
-  if (e.code === 'ArrowRight' || e.code === 'KeyD') {
-    if (playerLane < 1) playerLane++;
-  }
-  if (e.code === 'Space') {
-    if (!isJumping) {
-      playerVY = 0.35;
-      isJumping = true;
-    }
-  }
-}
-
-function onResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-let spawnTimer = 0;
-let buildingTimer = 0;
-let runCycle = 0;
-
-function update() {
-  if (!gameRunning) return;
-  
-  const dt = clock.getDelta();
-  
-  const targetX = lanePositions[playerLane + 1];
-  player.position.x += (targetX - player.position.x) * 0.2;
-  
-  if (isJumping) {
-    playerY += playerVY;
-    playerVY -= 0.018;
-    if (playerY <= 0) {
-      playerY = 0;
-      playerVY = 0;
-      isJumping = false;
-    }
-  }
-  player.position.y = playerY;
-  
-  runCycle += dt * 15;
-  if (!isJumping) {
-    player.getObjectByName('legL').rotation.x = Math.sin(runCycle) * 0.6;
-    player.getObjectByName('legR').rotation.x = -Math.sin(runCycle) * 0.6;
-    player.getObjectByName('shoeL').rotation.x = Math.sin(runCycle) * 0.6;
-    player.getObjectByName('shoeR').rotation.x = -Math.sin(runCycle) * 0.6;
-    player.getObjectByName('armL').rotation.x = -Math.sin(runCycle) * 0.5;
-    player.getObjectByName('armR').rotation.x = Math.sin(runCycle) * 0.5;
-  }
-  
-  // GUZAR - same speed, follows but never catches
-  const targetGuzarDist = 7;
-  guzarDistance += (targetGuzarDist - guzarDistance) * 0.02;
-  guzar.position.z = player.position.z + guzarDistance;
-  
-  // Guzar follows player's lane (with slight delay/lag)
-  guzar.position.x += (player.position.x - guzar.position.x) * 0.04;
-  
-  // Animate Guzar running
-  guzar.getObjectByName('legL').rotation.x = Math.sin(runCycle * 1.1) * 0.7;
-  guzar.getObjectByName('legR').rotation.x = -Math.sin(runCycle * 1.1) * 0.7;
-  guzar.getObjectByName('bootL').rotation.x = Math.sin(runCycle * 1.1) * 0.7;
-  guzar.getObjectByName('bootR').rotation.x = -Math.sin(runCycle * 1.1) * 0.7;
-  guzar.getObjectByName('armL').rotation.x = -Math.sin(runCycle * 1.1) * 0.6;
-  guzar.getObjectByName('armR').rotation.x = Math.sin(runCycle * 1.1) * 0.6;
-  
-  // Bobbing arrow above Guzar
-  const arrow = guzar.getObjectByName('arrow');
-  if (arrow) {
-    arrow.position.y = 2.25 + Math.sin(Date.now() * 0.005) * 0.1;
-  }
-  
-  // Show warning permanently since Guzar always chases
-  document.getElementById('guzarWarning').style.display = 'block';
-  
-  groundSegments.forEach(g => {
-    g.position.z += gameSpeed;
-    if (g.position.z > 30) g.position.z -= 120;
-  });
-  
-  buildings.forEach(b => {
-    b.position.z += gameSpeed;
-  });
-  buildings = buildings.filter(b => {
-    if (b.position.z > 20) {
-      scene.remove(b);
-      return false;
-    }
-    return true;
-  });
-  
-  buildingTimer += dt;
-  if (buildingTimer > 0.4) {
-    buildingTimer = 0;
-    spawnBuilding(-90);
-  }
-  
-  if (!gateSpawned) {
-    spawnTimer += dt;
-    if (spawnTimer > 0.6) {
-      spawnTimer = 0;
-      if (Math.random() < 0.6) spawnObstacle(-60);
-      if (Math.random() < 0.7) spawnCard(-60);
-    }
-  }
-  
-  obstacles.forEach(o => o.position.z += gameSpeed);
-  obstacles = obstacles.filter(o => {
-    if (o.position.z > 10) {
-      scene.remove(o);
-      return false;
-    }
-    return true;
-  });
-  
-  cards.forEach(c => {
-    c.position.z += gameSpeed;
-    c.rotation.y += 0.1;
-    c.position.y = 1.2 + Math.sin(Date.now() * 0.005 + c.position.z) * 0.15;
-  });
-  cards = cards.filter(c => {
-    if (c.position.z > 10) {
-      scene.remove(c);
-      return false;
-    }
-    return true;
-  });
-  
-  cards.forEach((c, i) => {
-    const dx = Math.abs(c.position.x - player.position.x);
-    const dz = Math.abs(c.position.z - player.position.z);
-    const dy = Math.abs(c.position.y - (player.position.y + 1));
-    if (dx < 0.8 && dz < 0.8 && dy < 1.2) {
-      scene.remove(c);
-      cards.splice(i, 1);
-      score += 37.5;
-      updateHUD();
-    }
-  });
-  
-  obstacles.forEach(o => {
-    const dx = Math.abs(o.position.x - player.position.x);
-    const dz = Math.abs(o.position.z - player.position.z);
-    if (dx < 0.7 && dz < 0.7) {
-      if (o.userData.type === 'barricade' && playerY > 1.2) return;
-      if (o.userData.type === 'papers' && playerY > 1.1) return;
-      if (o.userData.type === 'guard' && playerY > 1.8) return;
-      
-      let crashMsg = 'You crashed into ';
-      if (o.userData.type === 'guard') crashMsg += 'a Security Guard!';
-      else if (o.userData.type === 'barricade') crashMsg += 'a Barricade!';
-      else crashMsg += 'a Pile of Papers!';
-      
-      endGame(false, crashMsg);
-    }
-  });
-  
-  if (score >= TARGET_SCORE && !gateSpawned) {
-    gateSpawned = true;
-    obstacles.forEach(o => scene.remove(o));
-    cards.forEach(c => scene.remove(c));
-    obstacles = [];
-    cards = [];
-    spawnMainGate(-50);
-  }
-  
-  if (mainGate) {
-    mainGate.position.z += gameSpeed;
-    
-    const t = Date.now() / 200;
-    mainGate.userData.lights.forEach(l => {
-      l.material.color.setHex(Math.sin(t) > 0 ? 0xff0000 : 0x440000);
-    });
-    
-    if (!mainGate.userData.passed && mainGate.position.z > 1 && mainGate.position.z < 4) {
-      mainGate.userData.passed = true;
-      if (playerY > 1.6) {
-        endGame(true, 'GATEPASS APPROVED!', false);
-      } else {
-        endGame(false, 'GATEPASS BLOCKED!', false);
-      }
-    }
-  }
-}
-
-function updateHUD() {
-  document.getElementById('score').textContent = Math.floor(score);
-  const pct = Math.min(100, (score / TARGET_SCORE) * 100);
-  document.getElementById('progressBar').style.width = pct + '%';
-}
-
-function endGame(success, msg) {
-  if (gameEnded) return;
-  gameEnded = true;
-  gameRunning = false;
-  document.getElementById('gateAlert').style.display = 'none';
-  document.getElementById('guzarWarning').style.display = 'none';
-  
-  const cert = document.getElementById('certificate');
-  if (success) {
-    createConfetti();
-    cert.className = 'certificate approved';
-    cert.innerHTML = `
-      <h1>✅ APPROVED</h1>
-      <p style="font-size:24px;">CADET <span style="color:#ffff00">${playerData.name.toUpperCase()}</span></p>
-      <p style="font-size:30px; margin: 20px 0; color: #ffff00; text-shadow: 0 0 15px #ffff00;">🍔 GUZAR KA HALWA 🍔</p>
-      <p style="font-size:22px;">🎓 CELEBRATION TIME 🎓</p>
-      <hr style="margin:20px 0; opacity:0.5; border-color: currentColor;">
-      <p>You made it through the gate!</p>
-      <p>${msg}</p>
-      <p style="margin-top:15px;">Time for halwa and celebration!</p>
-      <p style="font-size:28px; margin-top:20px;">FINAL SCORE: ${Math.floor(score)}</p>
-      <button onclick="location.reload()">RUN AGAIN</button>
-    `;
-  } else {
-    cert.className = 'certificate rejected';
-    cert.innerHTML = `
-      <h1>❌ BLOCKED</h1>
-      <p style="font-size:24px;">CADET <span style="color:#ff0066">${playerData.name.toUpperCase()}</span></p>
-      <p style="font-size:30px; margin: 20px 0; color: #ff0066; text-shadow: 0 0 15px #ff0066;">ABB LAGEGI DC</p>
-      <p style="font-size:22px;">🚫 ENTRY DENIED 🚫</p>
-      <hr style="margin:20px 0; opacity:0.5; border-color: currentColor;">
-      <p>${msg}</p>
-      <p style="margin-top:15px;">Return to the dorm, student.</p>
-      <p style="font-size:28px; margin-top:20px;">SCORE: ${Math.floor(score)} / ${TARGET_SCORE}</p>
-      <button onclick="location.reload()">TRY AGAIN</button>
-    `;
-  }
-  document.getElementById('endScreen').style.display = 'flex';
-}
-
-function animate() {
-  requestAnimationFrame(animate);
-  update();
-  renderer.render(scene, camera);
-}
-
-function startGame() {
-  document.getElementById('title').style.display = 'none';
-  document.getElementById('hud').style.display = 'block';
-  document.getElementById('instructions').style.display = 'block';
-  init();
-  gameRunning = true;
-  clock.start();
-  animate();
-}
+});
 </script>
 </body>
 </html>
